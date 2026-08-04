@@ -1,0 +1,117 @@
+@if (student(); as s) {
+  <div class="p-6">
+    <div class="mb-6 flex items-center justify-between">
+      <div>
+        <h1 class="text-xl font-semibold text-slate-900">{{ s.nombres }} {{ s.apellidos }}</h1>
+        <p class="text-sm text-slate-500">
+          Matrícula {{ s.matricula }} · {{ course()?.nombre }} · {{ s.sexo }}
+        </p>
+      </div>
+      @if (riesgo(); as r) {
+        <div class="text-right">
+          <app-risk-badge [nivel]="r.nivel" />
+          <p class="mt-1 text-2xl font-semibold text-slate-900">{{ r.porcentaje }}%</p>
+        </div>
+      }
+    </div>
+
+    <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+      @if (canSeeAcademic()) {
+        <div class="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200 lg:col-span-2">
+          <h2 class="mb-3 text-sm font-semibold text-slate-700">
+            Rendimiento académico — Promedio general: {{ promedioGeneral() }}
+          </h2>
+          <table class="min-w-full divide-y divide-slate-100 text-sm">
+            <thead>
+              <tr class="text-left text-slate-500">
+                <th class="py-1 pr-4 font-medium">Asignatura</th>
+                <th class="py-1 pr-4 font-medium">Promedio período</th>
+                <th class="py-1 font-medium">Competencias</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              @for (r of resultados(); track r.asignaturaId) {
+                <tr>
+                  <td class="py-2 pr-4">{{ r.asignaturaNombre }}</td>
+                  <td class="py-2 pr-4 font-medium">{{ r.promedioPeriodo }}</td>
+                  <td class="py-2 text-slate-500">
+                    @for (c of r.competencias; track c.competencia) {
+                      <span class="mr-2">{{ c.competencia }}: {{ c.promedio }}</span>
+                    }
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="3" class="py-4 text-center text-slate-400">Sin calificaciones registradas.</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <div class="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+          <h2 class="mb-3 text-sm font-semibold text-slate-700">Asistencia</h2>
+          @if (attendance(); as att) {
+            <p class="text-2xl font-semibold text-slate-900">{{ att.asistencia }}%</p>
+            <p class="text-xs text-slate-500">Ausencias: {{ att.ausencias }}% · Tardanzas: {{ att.tardanzas }}%</p>
+          }
+        </div>
+      }
+
+      <div class="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200" [class.lg:col-span-3]="!canSeeAcademic()">
+        <h2 class="mb-3 text-sm font-semibold text-slate-700">Historial de riesgo</h2>
+        <ul class="divide-y divide-slate-100 text-sm">
+          @for (h of historial(); track h.id) {
+            <li class="py-2">
+              <p class="text-slate-700">
+                Sistema: {{ h.porcentajeOriginal }}% · Ajuste: {{ h.ajusteAplicado > 0 ? '+' : '' }}{{ h.ajusteAplicado }}% ·
+                <span class="font-semibold">Final: {{ h.porcentajeFinal }}%</span>
+              </p>
+              <p class="text-xs text-slate-400">{{ h.fecha | date: 'medium' }}</p>
+            </li>
+          } @empty {
+            <li class="py-4 text-center text-slate-400">Sin historial disponible.</li>
+          }
+        </ul>
+      </div>
+
+      @if (isOrientador()) {
+        <div class="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200 lg:col-span-3">
+          <h2 class="mb-3 text-sm font-semibold text-slate-700">Ajuste profesional del riesgo</h2>
+          <div class="flex items-center gap-3">
+            <input
+              type="number"
+              [ngModel]="ajuste()"
+              (ngModelChange)="ajuste.set($event)"
+              class="w-32 rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              placeholder="+/- %"
+            />
+            <button
+              type="button"
+              (click)="applyAdjustment()"
+              class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500"
+            >
+              Aplicar ajuste
+            </button>
+            @if (ajusteMessage()) {
+              <span class="text-sm text-slate-500">{{ ajusteMessage() }}</span>
+            }
+          </div>
+
+          <h2 class="mb-3 mt-6 text-sm font-semibold text-slate-700">Seguimiento psicopedagógico (confidencial)</h2>
+          <ul class="divide-y divide-slate-100 text-sm">
+            @for (seg of seguimientos(); track seg.id) {
+              <li class="py-2">
+                <p class="font-medium text-slate-700">{{ seg.fecha }} — {{ seg.motivo }} ({{ seg.estado }})</p>
+                <p class="text-slate-500">{{ seg.observaciones }}</p>
+                <p class="text-xs text-slate-400">Acciones: {{ seg.acciones }}</p>
+              </li>
+            } @empty {
+              <li class="py-4 text-center text-slate-400">Sin seguimientos registrados.</li>
+            }
+          </ul>
+        </div>
+      }
+    </div>
+  </div>
+}

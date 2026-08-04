@@ -1,0 +1,100 @@
+<div class="p-6">
+  <h1 class="mb-6 text-xl font-semibold text-slate-900">Evaluaciones</h1>
+
+  <div class="mb-6">
+    <label class="mb-1 block text-sm font-medium text-slate-700">Asignación (curso — asignatura)</label>
+    <select
+      [ngModel]="selectedAssignmentId()"
+      (ngModelChange)="selectAssignment($event)"
+      class="w-full max-w-md rounded-lg border border-slate-300 px-3 py-2 text-sm"
+    >
+      @for (a of assignments(); track a.id) {
+        <option [value]="a.id">{{ courseName(a.cursoId) }} — {{ subjectName(a.asignaturaId) }}</option>
+      }
+    </select>
+  </div>
+
+  @if (selectedAssignment(); as assignment) {
+    <div class="mb-6 rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+      <h2 class="mb-3 text-sm font-semibold text-slate-700">Nueva actividad de evaluación</h2>
+      <form [formGroup]="form" (ngSubmit)="createActivity()" class="grid grid-cols-1 gap-3 sm:grid-cols-5 sm:items-end">
+        <div class="sm:col-span-2">
+          <label class="mb-1 block text-xs font-medium text-slate-700">Nombre</label>
+          <input formControlName="nombre" placeholder="Examen" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+        </div>
+        <div>
+          <label class="mb-1 block text-xs font-medium text-slate-700">Competencia</label>
+          <select formControlName="competencia" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+            @for (c of competencias; track c) {
+              <option [value]="c">{{ c }}</option>
+            }
+          </select>
+        </div>
+        <div>
+          <label class="mb-1 block text-xs font-medium text-slate-700">Peso (%)</label>
+          <input type="number" formControlName="porcentaje" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+        </div>
+        <div>
+          <label class="mb-1 block text-xs font-medium text-slate-700">Período</label>
+          <select formControlName="periodoEvaluativo" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+            @for (p of periodos; track p) {
+              <option [value]="p">{{ p }}</option>
+            }
+          </select>
+        </div>
+        <div>
+          <label class="mb-1 block text-xs font-medium text-slate-700">Fecha</label>
+          <input type="date" formControlName="fecha" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+        </div>
+        <div class="sm:col-span-5">
+          @if (message()) {
+            <p class="mb-2 text-sm text-red-600">{{ message() }}</p>
+          }
+          <button type="submit" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500">
+            Agregar actividad
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div class="overflow-x-auto rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+      <h2 class="mb-3 text-sm font-semibold text-slate-700">Registro de calificaciones</h2>
+      <table class="min-w-full divide-y divide-slate-200 text-sm">
+        <thead>
+          <tr class="text-left text-slate-500">
+            <th class="px-2 py-1 font-medium">Estudiante</th>
+            @for (act of activities(); track act.id) {
+              <th class="px-2 py-1 font-medium">{{ act.nombre }} ({{ act.porcentaje }}%)</th>
+            }
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          @for (student of students(); track student.id) {
+            <tr>
+              <td class="px-2 py-2 font-medium text-slate-700">{{ student.nombres }} {{ student.apellidos }}</td>
+              @for (act of activities(); track act.id) {
+                <td class="px-2 py-2">
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    class="w-20 rounded-lg border border-slate-300 px-2 py-1 text-sm"
+                    [ngModel]="gradeFor(act.id, student.id)"
+                    (ngModelChange)="setGrade(act.id, student.id, $event)"
+                    (blur)="saveGrade(act.id, student.id)"
+                  />
+                </td>
+              }
+            </tr>
+          } @empty {
+            <tr>
+              <td [attr.colspan]="activities().length + 1" class="px-2 py-6 text-center text-slate-400">
+                No hay estudiantes en este curso.
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

@@ -1,0 +1,22 @@
+@import 'tailwindcss';
+@import '@angular/material/prebuilt-themes/indigo-pink.css';
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  font-family: 'Roboto', 'Helvetica Neue', sans-serif;
+}
+
+.risk-badge {
+  @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold;
+}
+.risk-badge--bajo {
+  @apply bg-green-100 text-green-800;
+}
+.risk-badge--medio {
+  @apply bg-yellow-100 text-yellow-800;
+}
+.risk-badge--alto {
+  @apply bg-red-100 text-red-800;
+}

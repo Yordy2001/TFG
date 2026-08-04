@@ -1,0 +1,86 @@
+<div class="p-6">
+  <div class="mb-6 flex items-center justify-between">
+    <h1 class="text-xl font-semibold text-slate-900">Usuarios</h1>
+    <button
+      type="button"
+      (click)="showForm.set(!showForm())"
+      class="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500"
+    >
+      {{ showForm() ? 'Cancelar' : '+ Nuevo usuario' }}
+    </button>
+  </div>
+
+  @if (showForm()) {
+    <form [formGroup]="form" (ngSubmit)="submit()" class="mb-6 grid max-w-2xl grid-cols-2 gap-3 rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+      <div>
+        <label class="mb-1 block text-xs font-medium text-slate-700">Nombres</label>
+        <input formControlName="nombres" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+      </div>
+      <div>
+        <label class="mb-1 block text-xs font-medium text-slate-700">Apellidos</label>
+        <input formControlName="apellidos" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+      </div>
+      <div>
+        <label class="mb-1 block text-xs font-medium text-slate-700">Correo</label>
+        <input type="email" formControlName="email" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+      </div>
+      <div>
+        <label class="mb-1 block text-xs font-medium text-slate-700">Contraseña</label>
+        <input type="password" formControlName="password" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+      </div>
+      <div>
+        <label class="mb-1 block text-xs font-medium text-slate-700">Rol</label>
+        <select formControlName="rol" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+          @for (rol of roles; track rol) {
+            <option [value]="rol">{{ rol }}</option>
+          }
+        </select>
+      </div>
+      <div class="col-span-2">
+        <button type="submit" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500">
+          Crear usuario
+        </button>
+      </div>
+    </form>
+  }
+
+  @if (loading()) {
+    <p class="text-sm text-slate-500">Cargando usuarios...</p>
+  } @else {
+    <div class="overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
+      <table class="min-w-full divide-y divide-slate-200 text-sm">
+        <thead class="bg-slate-50">
+          <tr>
+            <th class="px-4 py-2 text-left font-medium text-slate-500">Nombre</th>
+            <th class="px-4 py-2 text-left font-medium text-slate-500">Correo</th>
+            <th class="px-4 py-2 text-left font-medium text-slate-500">Rol</th>
+            <th class="px-4 py-2 text-left font-medium text-slate-500">Estado</th>
+            <th class="px-4 py-2"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          @for (user of users(); track user.id) {
+            <tr>
+              <td class="px-4 py-2 font-medium text-slate-700">{{ user.nombres }} {{ user.apellidos }}</td>
+              <td class="px-4 py-2 text-slate-500">{{ user.email }}</td>
+              <td class="px-4 py-2 text-slate-500">{{ user.rol }}</td>
+              <td class="px-4 py-2">
+                <span
+                  class="rounded-full px-2 py-0.5 text-xs font-medium"
+                  [class]="user.activo ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'"
+                >
+                  {{ user.activo ? 'Activo' : 'Inactivo' }}
+                </span>
+              </td>
+              <td class="px-4 py-2">
+                <button type="button" (click)="toggleActive(user)" class="text-xs text-indigo-600 hover:underline">
+                  {{ user.activo ? 'Desactivar' : 'Activar' }}
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

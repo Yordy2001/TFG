@@ -1,0 +1,70 @@
+<div class="p-6">
+  <div class="mb-6 flex items-center justify-between">
+    <h1 class="text-xl font-semibold text-slate-900">Estudiantes</h1>
+    @if (canManage()) {
+      <a
+        routerLink="/students/new"
+        class="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500"
+      >
+        + Nuevo estudiante
+      </a>
+    }
+  </div>
+
+  <div class="mb-4">
+    <select
+      [ngModel]="cursoFilter()"
+      (ngModelChange)="cursoFilter.set($event)"
+      class="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+    >
+      <option value="">Todos los cursos</option>
+      @for (curso of courses(); track curso.id) {
+        <option [value]="curso.id">{{ curso.nombre }}</option>
+      }
+    </select>
+  </div>
+
+  @if (loading()) {
+    <p class="text-sm text-slate-500">Cargando estudiantes...</p>
+  } @else {
+    <div class="overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
+      <table class="min-w-full divide-y divide-slate-200 text-sm">
+        <thead class="bg-slate-50">
+          <tr>
+            <th class="px-4 py-2 text-left font-medium text-slate-500">Matrícula</th>
+            <th class="px-4 py-2 text-left font-medium text-slate-500">Nombre</th>
+            <th class="px-4 py-2 text-left font-medium text-slate-500">Curso</th>
+            <th class="px-4 py-2 text-left font-medium text-slate-500">Sexo</th>
+            <th class="px-4 py-2 text-left font-medium text-slate-500">Estado</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          @for (student of filtered(); track student.id) {
+            <tr class="hover:bg-slate-50">
+              <td class="px-4 py-2 text-slate-500">{{ student.matricula }}</td>
+              <td class="px-4 py-2">
+                <a [routerLink]="['/students', student.id]" class="font-medium text-indigo-600 hover:underline">
+                  {{ student.nombres }} {{ student.apellidos }}
+                </a>
+              </td>
+              <td class="px-4 py-2 text-slate-500">{{ courseName(student.cursoId) }}</td>
+              <td class="px-4 py-2 text-slate-500">{{ student.sexo }}</td>
+              <td class="px-4 py-2">
+                <span
+                  class="rounded-full px-2 py-0.5 text-xs font-medium"
+                  [class]="student.activo ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'"
+                >
+                  {{ student.activo ? 'Activo' : 'Inactivo' }}
+                </span>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="5" class="px-4 py-6 text-center text-slate-400">No hay estudiantes registrados.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

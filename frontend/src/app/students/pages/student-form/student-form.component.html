@@ -1,0 +1,55 @@
+<div class="p-6">
+  <h1 class="mb-6 text-xl font-semibold text-slate-900">Nuevo estudiante</h1>
+
+  <form [formGroup]="form" (ngSubmit)="submit()" class="max-w-lg space-y-4 rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+    <div>
+      <label class="mb-1 block text-sm font-medium text-slate-700">Matrícula</label>
+      <input formControlName="matricula" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+    </div>
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label class="mb-1 block text-sm font-medium text-slate-700">Nombres</label>
+        <input formControlName="nombres" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+      </div>
+      <div>
+        <label class="mb-1 block text-sm font-medium text-slate-700">Apellidos</label>
+        <input formControlName="apellidos" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+      </div>
+    </div>
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label class="mb-1 block text-sm font-medium text-slate-700">Sexo</label>
+        <select formControlName="sexo" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+          @for (sexo of sexos; track sexo) {
+            <option [value]="sexo">{{ sexo }}</option>
+          }
+        </select>
+      </div>
+      <div>
+        <label class="mb-1 block text-sm font-medium text-slate-700">Fecha de nacimiento</label>
+        <input type="date" formControlName="fechaNacimiento" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+      </div>
+    </div>
+    <div>
+      <label class="mb-1 block text-sm font-medium text-slate-700">Curso</label>
+      <select formControlName="cursoId" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+        <option value="" disabled>Seleccione un curso</option>
+        @for (curso of courses(); track curso.id) {
+          <option [value]="curso.id">{{ curso.nombre }}</option>
+        }
+      </select>
+    </div>
+
+    @if (errorMessage()) {
+      <p class="text-sm text-red-600">{{ errorMessage() }}</p>
+    }
+
+    <button
+      type="submit"
+      [disabled]="saving()"
+      class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-50"
+    >
+      {{ saving() ? 'Guardando...' : 'Guardar' }}
+    </button>
+  </form>
+</div>

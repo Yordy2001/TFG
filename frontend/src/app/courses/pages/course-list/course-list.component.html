@@ -1,0 +1,49 @@
+<div class="p-6">
+  <div class="mb-6 flex items-center justify-between">
+    <h1 class="text-xl font-semibold text-slate-900">Cursos</h1>
+    @if (canManage()) {
+      <button
+        type="button"
+        (click)="showForm.set(!showForm())"
+        class="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500"
+      >
+        {{ showForm() ? 'Cancelar' : '+ Nuevo curso' }}
+      </button>
+    }
+  </div>
+
+  @if (showForm()) {
+    <form [formGroup]="form" (ngSubmit)="submit()" class="mb-6 flex max-w-xl items-end gap-3 rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+      <div class="flex-1">
+        <label class="mb-1 block text-xs font-medium text-slate-700">Nombre</label>
+        <input formControlName="nombre" placeholder="3ro A" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+      </div>
+      <div class="flex-1">
+        <label class="mb-1 block text-xs font-medium text-slate-700">Grado/Nivel</label>
+        <input formControlName="gradoNivel" placeholder="3ro" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+      </div>
+      <div class="flex-1">
+        <label class="mb-1 block text-xs font-medium text-slate-700">Sección</label>
+        <input formControlName="seccion" placeholder="A" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+      </div>
+      <button type="submit" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500">
+        Guardar
+      </button>
+    </form>
+  }
+
+  @if (loading()) {
+    <p class="text-sm text-slate-500">Cargando cursos...</p>
+  } @else {
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      @for (curso of courses(); track curso.id) {
+        <div class="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+          <p class="text-sm font-semibold text-slate-900">{{ curso.nombre }}</p>
+          <p class="text-xs text-slate-500">Grado: {{ curso.gradoNivel }} · Sección: {{ curso.seccion }}</p>
+        </div>
+      } @empty {
+        <p class="text-sm text-slate-400">No hay cursos registrados.</p>
+      }
+    </div>
+  }
+</div>
