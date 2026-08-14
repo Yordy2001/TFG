@@ -1,12 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { MockDataStore } from '../../common/mock-data/mock-data.store';
 import { NivelRiesgo, Sexo } from '../../common/enums';
+import { Role } from '../../common/enums/role.enum';
 
 @Injectable()
 export class DashboardService {
   constructor(private readonly store: MockDataStore) {}
 
-  overview(centroId: string) {
+  overview(centroId: string, role: Role) {
     const estudiantes = this.store.estudiantes.filter((e) => e.centroId === centroId && e.activo);
     const riesgos = this.store.riesgos.filter((r) => r.centroId === centroId);
     const cursos = this.store.cursos.filter((c) => c.centroId === centroId);
@@ -43,16 +44,20 @@ export class DashboardService {
         };
       });
 
-    const ultimosSeguimientos = [...this.store.seguimientos]
-      .filter((s) => s.centroId === centroId)
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-      .slice(0, 5)
-      .map((s) => ({
-        id: s.id,
-        estudianteId: s.estudianteId,
-        fecha: s.fecha,
-        estado: s.estado,
-      }));
+    // El seguimiento del orientador es confidencial: solo se expone al propio orientador.
+    const ultimosSeguimientos =
+      role === Role.ORIENTADOR
+        ? [...this.store.seguimientos]
+            .filter((s) => s.centroId === centroId)
+            .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+            .slice(0, 5)
+            .map((s) => ({
+              id: s.id,
+              estudianteId: s.estudianteId,
+              fecha: s.fecha,
+              estado: s.estado,
+            }))
+        : [];
 
     const alertasPendientes = riesgos.filter((r) => r.nivel === NivelRiesgo.ALTO).length;
 

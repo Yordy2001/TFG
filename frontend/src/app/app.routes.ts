@@ -70,7 +70,7 @@ export const routes: Routes = [
           import('./follow-up/pages/follow-up-list/follow-up-list.component').then(
             (m) => m.FollowUpListComponent,
           ),
-        canActivate: [roleGuard([Role.ORIENTADOR, Role.ADMINISTRADOR])],
+        canActivate: [roleGuard([Role.ORIENTADOR])],
       },
       {
         path: 'users',

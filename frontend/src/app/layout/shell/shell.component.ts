@@ -40,7 +40,7 @@ export class ShellComponent {
       label: 'Seguimiento',
       path: '/follow-up',
       icon: 'psychology',
-      roles: [Role.ORIENTADOR, Role.ADMINISTRADOR],
+      roles: [Role.ORIENTADOR],
     },
     { label: 'Usuarios', path: '/users', icon: 'manage_accounts', roles: [Role.ADMINISTRADOR] },
   ];

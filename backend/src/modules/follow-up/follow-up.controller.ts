@@ -9,7 +9,7 @@ import { CurrentUser, AuthenticatedUser } from '../../common/decorators/current-
 @ApiTags('follow-up')
 @ApiBearerAuth()
 @Controller('follow-up')
-@Roles(Role.ORIENTADOR, Role.ADMINISTRADOR)
+@Roles(Role.ORIENTADOR)
 export class FollowUpController {
   constructor(private readonly followUpService: FollowUpService) {}
 
