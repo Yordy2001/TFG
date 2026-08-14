@@ -1,21 +1,23 @@
 <div class="p-6">
-  <h1 class="mb-6 text-xl font-semibold text-slate-900">Evaluaciones</h1>
+  <app-top-bar title="Registro de Calificaciones" eyebrow="Sistema de Alerta Temprana" />
 
-  <div class="mb-6">
-    <label class="mb-1 block text-sm font-medium text-slate-700">Asignación (curso — asignatura)</label>
-    <select
-      [ngModel]="selectedAssignmentId()"
-      (ngModelChange)="selectAssignment($event)"
-      class="w-full max-w-md rounded-lg border border-slate-300 px-3 py-2 text-sm"
-    >
-      @for (a of assignments(); track a.id) {
-        <option [value]="a.id">{{ courseName(a.cursoId) }} — {{ subjectName(a.asignaturaId) }}</option>
-      }
-    </select>
+  <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <div>
+      <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Asignación (curso — asignatura)</label>
+      <select
+        [ngModel]="selectedAssignmentId()"
+        (ngModelChange)="selectAssignment($event)"
+        class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#003366] focus:outline-none focus:ring-1 focus:ring-[#003366]"
+      >
+        @for (a of assignments(); track a.id) {
+          <option [value]="a.id">{{ courseName(a.cursoId) }} — {{ subjectName(a.asignaturaId) }}</option>
+        }
+      </select>
+    </div>
   </div>
 
   @if (selectedAssignment(); as assignment) {
-    <div class="mb-6 rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+    <div class="card mb-6">
       <h2 class="mb-3 text-sm font-semibold text-slate-700">Nueva actividad de evaluación</h2>
       <form [formGroup]="form" (ngSubmit)="createActivity()" class="grid grid-cols-1 gap-3 sm:grid-cols-5 sm:items-end">
         <div class="sm:col-span-2">
@@ -48,16 +50,14 @@
         </div>
         <div class="sm:col-span-5">
           @if (message()) {
-            <p class="mb-2 text-sm text-red-600">{{ message() }}</p>
+            <p class="mb-2 text-sm text-[#d92d20]">{{ message() }}</p>
           }
-          <button type="submit" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500">
-            Agregar actividad
-          </button>
+          <button type="submit" class="btn-primary">Agregar actividad</button>
         </div>
       </form>
     </div>
 
-    <div class="overflow-x-auto rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+    <div class="card overflow-x-auto">
       <h2 class="mb-3 text-sm font-semibold text-slate-700">Registro de calificaciones</h2>
       <table class="min-w-full divide-y divide-slate-200 text-sm">
         <thead>
@@ -78,7 +78,8 @@
                     type="number"
                     min="0"
                     max="100"
-                    class="w-20 rounded-lg border border-slate-300 px-2 py-1 text-sm"
+                    class="w-20 rounded-lg border px-2 py-1 text-sm"
+                    [class]="gradeCellClass(act.id, student.id)"
                     [ngModel]="gradeFor(act.id, student.id)"
                     (ngModelChange)="setGrade(act.id, student.id, $event)"
                     (blur)="saveGrade(act.id, student.id)"

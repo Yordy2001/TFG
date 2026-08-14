@@ -2,6 +2,7 @@ import { Component, computed, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
+import { MatIconModule } from '@angular/material/icon';
 import { StudentsService } from '../../students.service';
 import { CoursesService } from '../../../courses/courses.service';
 import { RiskService } from '../../../risk/risk.service';
@@ -12,11 +13,13 @@ import { AuthService } from '../../../core/services/auth.service';
 import { Role } from '../../../core/models/auth.model';
 import { Curso, Estudiante, HistorialRiesgo, Riesgo, SeguimientoOrientador } from '../../../core/models/domain.model';
 import { RiskBadgeComponent } from '../../../shared/components/risk-badge/risk-badge.component';
+import { StatCardComponent } from '../../../shared/components/stat-card/stat-card.component';
+import { TopBarComponent } from '../../../shared/components/top-bar/top-bar.component';
 
 @Component({
   selector: 'app-student-detail',
   standalone: true,
-  imports: [FormsModule, DatePipe, RiskBadgeComponent],
+  imports: [FormsModule, DatePipe, RiskBadgeComponent, StatCardComponent, TopBarComponent, MatIconModule],
   templateUrl: './student-detail.component.html',
 })
 export class StudentDetailComponent {

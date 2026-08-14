@@ -8,11 +8,14 @@ import { StudentsService } from '../../../students/students.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { Estudiante, SeguimientoOrientador } from '../../../core/models/domain.model';
 import { API_BASE_URL } from '../../../core/config/api.config';
+import { TopBarComponent } from '../../../shared/components/top-bar/top-bar.component';
+
+type Categoria = 'Académico' | 'Familiar/Hogar' | 'Emocional/Social';
 
 @Component({
   selector: 'app-follow-up-list',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, TopBarComponent],
   templateUrl: './follow-up-list.component.html',
 })
 export class FollowUpListComponent {
@@ -23,8 +26,9 @@ export class FollowUpListComponent {
 
   readonly recent = signal<SeguimientoOrientador[]>([]);
   readonly students = signal<Estudiante[]>([]);
-  readonly showForm = signal(false);
   readonly message = signal<string | null>(null);
+  readonly categoria = signal<Categoria>('Académico');
+  readonly categorias: Categoria[] = ['Académico', 'Familiar/Hogar', 'Emocional/Social'];
 
   readonly form = this.fb.group({
     estudianteId: ['', Validators.required],
@@ -60,7 +64,7 @@ export class FollowUpListComponent {
       .subscribe({
         next: () => {
           this.form.reset();
-          this.showForm.set(false);
+          this.categoria.set('Académico');
           this.loadRecent();
         },
         error: () => this.message.set('No se pudo registrar el seguimiento.'),

@@ -1,40 +1,67 @@
 <div class="flex min-h-screen items-center justify-center bg-slate-100 px-4">
   <div class="w-full max-w-sm rounded-xl bg-white p-8 shadow-sm ring-1 ring-slate-200">
     <div class="mb-6 text-center">
-      <h1 class="text-lg font-semibold text-slate-900">Sistema de Detección Temprana</h1>
-      <p class="mt-1 text-sm text-slate-500">Riesgo de Abandono Escolar</p>
+      <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-[#003366] text-white">
+        <mat-icon class="!h-6 !w-6 !text-[24px]">shield</mat-icon>
+      </div>
+      <h1 class="text-lg font-bold text-slate-900">GuardianEdu</h1>
+      <p class="text-xs text-slate-500">Prevención de Deserción Escolar</p>
+    </div>
+
+    <div class="mb-6 text-center">
+      <h2 class="text-xl font-semibold text-slate-900">Bienvenido</h2>
+      <p class="mt-1 text-sm text-slate-500">Inicie sesión con sus credenciales institucionales</p>
     </div>
 
     <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4">
       <div>
-        <label class="mb-1 block text-sm font-medium text-slate-700">Correo electrónico</label>
-        <input
-          type="email"
-          formControlName="email"
-          class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-          placeholder="usuario@centro.edu.do"
-        />
+        <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600"
+          >Usuario o correo institucional</label
+        >
+        <div class="relative">
+          <mat-icon class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 !h-5 !w-5 !text-[20px] text-slate-400"
+            >person_outline</mat-icon
+          >
+          <input
+            type="email"
+            formControlName="email"
+            class="w-full rounded-lg border border-slate-300 bg-slate-50 py-2 pl-10 pr-3 text-sm focus:border-[#003366] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#003366]"
+            placeholder="ejemplo@escuela.edu"
+          />
+        </div>
       </div>
       <div>
-        <label class="mb-1 block text-sm font-medium text-slate-700">Contraseña</label>
-        <input
-          type="password"
-          formControlName="password"
-          class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-          placeholder="••••••••"
-        />
+        <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Contraseña</label>
+        <div class="relative">
+          <mat-icon class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 !h-5 !w-5 !text-[20px] text-slate-400"
+            >lock_outline</mat-icon
+          >
+          <input
+            [type]="showPassword() ? 'text' : 'password'"
+            formControlName="password"
+            class="w-full rounded-lg border border-slate-300 bg-slate-50 py-2 pl-10 pr-10 text-sm focus:border-[#003366] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#003366]"
+            placeholder="••••••••"
+          />
+          <button
+            type="button"
+            (click)="showPassword.set(!showPassword())"
+            class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+            [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+          >
+            <mat-icon class="!h-5 !w-5 !text-[20px]">{{ showPassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+        </div>
       </div>
 
       @if (errorMessage()) {
         <p class="text-sm text-red-600">{{ errorMessage() }}</p>
       }
 
-      <button
-        type="submit"
-        [disabled]="loading()"
-        class="w-full rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-50"
-      >
-        {{ loading() ? 'Ingresando...' : 'Ingresar' }}
+      <button type="submit" [disabled]="loading()" class="btn-primary w-full">
+        {{ loading() ? 'Ingresando...' : 'Iniciar Sesión' }}
+        @if (!loading()) {
+          <mat-icon class="!h-4 !w-4 !text-[16px]">arrow_forward</mat-icon>
+        }
       </button>
     </form>
 

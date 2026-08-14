@@ -1,23 +1,81 @@
 @if (student(); as s) {
   <div class="p-6">
-    <div class="mb-6 flex items-center justify-between">
-      <div>
-        <h1 class="text-xl font-semibold text-slate-900">{{ s.nombres }} {{ s.apellidos }}</h1>
-        <p class="text-sm text-slate-500">
-          Matrícula {{ s.matricula }} · {{ course()?.nombre }} · {{ s.sexo }}
-        </p>
+    <app-top-bar title="Perfil del Estudiante" eyebrow="Sistema de Alerta Temprana" />
+
+    <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <div class="card lg:col-span-1">
+        <div class="mb-4 flex flex-col items-center text-center">
+          <div class="mb-3 flex h-20 w-20 items-center justify-center rounded-full bg-[#003366] text-2xl font-semibold text-white">
+            {{ s.nombres[0] }}{{ s.apellidos[0] }}
+          </div>
+          <h1 class="text-lg font-semibold text-slate-900">{{ s.nombres }} {{ s.apellidos }}</h1>
+          <p class="text-xs text-slate-500">ID: {{ s.matricula }}</p>
+        </div>
+        <div class="grid grid-cols-2 gap-3 border-t border-slate-100 pt-4 text-sm">
+          <div>
+            <p class="text-xs font-medium text-slate-400">Curso</p>
+            <p class="text-slate-700">{{ course()?.nombre ?? '—' }}</p>
+          </div>
+          <div>
+            <p class="text-xs font-medium text-slate-400">Sexo</p>
+            <p class="text-slate-700">{{ s.sexo }}</p>
+          </div>
+          <div>
+            <p class="text-xs font-medium text-slate-400">Fecha de nacimiento</p>
+            <p class="text-slate-700">{{ s.fechaNacimiento | date: 'mediumDate' }}</p>
+          </div>
+          <div>
+            <p class="text-xs font-medium text-slate-400">Estado</p>
+            <p class="text-slate-700">{{ s.activo ? 'Activo' : 'Inactivo' }}</p>
+          </div>
+        </div>
       </div>
+
       @if (riesgo(); as r) {
-        <div class="text-right">
-          <app-risk-badge [nivel]="r.nivel" />
-          <p class="mt-1 text-2xl font-semibold text-slate-900">{{ r.porcentaje }}%</p>
+        <div [class]="r.nivel === 'ALTO' ? 'card risk-panel-alto lg:col-span-2' : 'card lg:col-span-2'">
+          <div class="flex items-start justify-between">
+            <div>
+              <div class="mb-2 flex items-center gap-2">
+                @if (r.nivel === 'ALTO') {
+                  <mat-icon class="!h-5 !w-5 !text-[20px] text-[#d92d20]">warning</mat-icon>
+                }
+                <app-risk-badge [nivel]="r.nivel" />
+              </div>
+              <p class="text-3xl font-semibold text-slate-900">{{ r.porcentaje }}%</p>
+              <p class="mt-1 text-xs text-slate-500">Nivel de riesgo calculado por el sistema</p>
+            </div>
+            @if (isOrientador()) {
+              <a href="#ajuste-riesgo" class="btn-danger">Registrar Intervención</a>
+            }
+          </div>
         </div>
       }
     </div>
 
-    <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+    <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <app-stat-card
+        label="Tasa de asistencia"
+        [value]="attendance() ? attendance()!.asistencia + '%' : '—'"
+        icon="event_available"
+        tone="neutral"
+      />
+      <app-stat-card
+        label="Promedio acumulado"
+        [value]="promedioGeneral()"
+        icon="menu_book"
+        [tone]="promedioGeneral() < 3 ? 'danger' : 'neutral'"
+      />
+      <app-stat-card
+        label="Incidentes disciplinarios"
+        [value]="s.incidentesDisciplinarios"
+        icon="report"
+        [tone]="s.incidentesDisciplinarios > 0 ? 'warning' : 'success'"
+      />
+    </div>
+
+    <div class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
       @if (canSeeAcademic()) {
-        <div class="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200 lg:col-span-2">
+        <div class="card lg:col-span-2">
           <h2 class="mb-3 text-sm font-semibold text-slate-700">
             Rendimiento académico — Promedio general: {{ promedioGeneral() }}
           </h2>
@@ -49,7 +107,7 @@
           </table>
         </div>
 
-        <div class="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+        <div class="card">
           <h2 class="mb-3 text-sm font-semibold text-slate-700">Asistencia</h2>
           @if (attendance(); as att) {
             <p class="text-2xl font-semibold text-slate-900">{{ att.asistencia }}%</p>
@@ -58,16 +116,22 @@
         </div>
       }
 
-      <div class="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200" [class.lg:col-span-3]="!canSeeAcademic()">
-        <h2 class="mb-3 text-sm font-semibold text-slate-700">Historial de riesgo</h2>
+      <div class="card" [class.lg:col-span-3]="!canSeeAcademic()">
+        <h2 class="mb-3 text-sm font-semibold text-slate-700">Alertas y Eventos Recientes</h2>
         <ul class="divide-y divide-slate-100 text-sm">
           @for (h of historial(); track h.id) {
-            <li class="py-2">
-              <p class="text-slate-700">
-                Sistema: {{ h.porcentajeOriginal }}% · Ajuste: {{ h.ajusteAplicado > 0 ? '+' : '' }}{{ h.ajusteAplicado }}% ·
-                <span class="font-semibold">Final: {{ h.porcentajeFinal }}%</span>
-              </p>
-              <p class="text-xs text-slate-400">{{ h.fecha | date: 'medium' }}</p>
+            <li class="flex gap-3 py-2">
+              <span
+                class="mt-1.5 h-2 w-2 shrink-0 rounded-full"
+                [class]="h.nivel === 'ALTO' ? 'dot-alto' : h.nivel === 'MEDIO' ? 'dot-medio' : 'dot-bajo'"
+              ></span>
+              <div>
+                <p class="text-slate-700">
+                  Sistema: {{ h.porcentajeOriginal }}% · Ajuste: {{ h.ajusteAplicado > 0 ? '+' : '' }}{{ h.ajusteAplicado }}% ·
+                  <span class="font-semibold">Final: {{ h.porcentajeFinal }}%</span>
+                </p>
+                <p class="text-xs text-slate-400">{{ h.fecha | date: 'medium' }}</p>
+              </div>
             </li>
           } @empty {
             <li class="py-4 text-center text-slate-400">Sin historial disponible.</li>
@@ -76,7 +140,7 @@
       </div>
 
       @if (isOrientador()) {
-        <div class="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200 lg:col-span-3">
+        <div id="ajuste-riesgo" class="card lg:col-span-3">
           <h2 class="mb-3 text-sm font-semibold text-slate-700">Ajuste profesional del riesgo</h2>
           <div class="flex items-center gap-3">
             <input
@@ -86,13 +150,7 @@
               class="w-32 rounded-lg border border-slate-300 px-3 py-2 text-sm"
               placeholder="+/- %"
             />
-            <button
-              type="button"
-              (click)="applyAdjustment()"
-              class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500"
-            >
-              Aplicar ajuste
-            </button>
+            <button type="button" (click)="applyAdjustment()" class="btn-primary">Aplicar ajuste</button>
             @if (ajusteMessage()) {
               <span class="text-sm text-slate-500">{{ ajusteMessage() }}</span>
             }

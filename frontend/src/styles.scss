@@ -1,11 +1,22 @@
 @import 'tailwindcss';
 @import '@angular/material/prebuilt-themes/indigo-pink.css';
 
+@theme {
+  --font-sans: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+
+  /* Institutional Guardian palette */
+  --color-guardian-primary: #003366;
+  --color-guardian-primary-dark: #001f3f;
+  --color-guardian-primary-light: #0a4d8c;
+  --color-guardian-accent: #d92d20;
+  --color-guardian-accent-light: #fee4e2;
+}
+
 html,
 body {
   height: 100%;
   margin: 0;
-  font-family: 'Roboto', 'Helvetica Neue', sans-serif;
+  font-family: var(--font-sans);
 }
 
 .risk-badge {
@@ -15,8 +26,34 @@ body {
   @apply bg-green-100 text-green-800;
 }
 .risk-badge--medio {
-  @apply bg-yellow-100 text-yellow-800;
+  @apply bg-amber-100 text-amber-800;
 }
 .risk-badge--alto {
-  @apply bg-red-100 text-red-800;
+  @apply bg-red-100 text-[#d92d20];
+}
+
+.btn-primary {
+  @apply inline-flex items-center justify-center gap-2 rounded-lg bg-[#003366] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#0a4d8c] disabled:opacity-50;
+}
+.btn-secondary {
+  @apply inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50;
+}
+.btn-danger {
+  @apply inline-flex items-center justify-center gap-2 rounded-lg bg-[#d92d20] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#b8241a];
+}
+
+.card {
+  @apply rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200;
+}
+.risk-panel-alto {
+  @apply bg-[#fee4e2] ring-2 ring-[#d92d20];
+}
+.dot-alto {
+  @apply bg-[#d92d20];
+}
+.dot-medio {
+  @apply bg-amber-500;
+}
+.dot-bajo {
+  @apply bg-green-500;
 }

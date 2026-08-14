@@ -1,14 +1,17 @@
 import { Component, computed, signal } from '@angular/core';
 import { NgApexchartsModule, ApexChart, ApexNonAxisChartSeries, ApexAxisChartSeries, ApexXAxis } from 'ng-apexcharts';
 import { RouterLink } from '@angular/router';
+import { MatIconModule } from '@angular/material/icon';
 import { DashboardService } from './dashboard.service';
 import { DashboardOverview, NivelRiesgo } from '../core/models/domain.model';
 import { RiskBadgeComponent } from '../shared/components/risk-badge/risk-badge.component';
+import { StatCardComponent } from '../shared/components/stat-card/stat-card.component';
+import { TopBarComponent } from '../shared/components/top-bar/top-bar.component';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [NgApexchartsModule, RouterLink, RiskBadgeComponent],
+  imports: [NgApexchartsModule, RouterLink, RiskBadgeComponent, StatCardComponent, TopBarComponent, MatIconModule],
   templateUrl: './dashboard.component.html',
 })
 export class DashboardComponent {
@@ -24,7 +27,7 @@ export class DashboardComponent {
 
   readonly riskPieChart: ApexChart = { type: 'donut', height: 260 };
   readonly riskPieLabels = ['Riesgo bajo', 'Riesgo medio', 'Riesgo alto'];
-  readonly riskPieColors = ['#22c55e', '#eab308', '#ef4444'];
+  readonly riskPieColors = ['#22c55e', '#f59e0b', '#d92d20'];
 
   readonly cursoBarSeries = computed<ApexAxisChartSeries>(() => [
     { name: 'Estudiantes', data: this.overview()?.distribucionCurso.map((c) => c.total) ?? [] },

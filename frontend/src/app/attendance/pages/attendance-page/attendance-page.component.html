@@ -1,22 +1,48 @@
 <div class="p-6">
-  <h1 class="mb-6 text-xl font-semibold text-slate-900">Asistencia</h1>
+  <app-top-bar title="Registro de Asistencia" eyebrow="Sistema de Alerta Temprana" />
 
-  <div class="mb-6 flex flex-wrap items-end gap-4">
-    <div>
-      <label class="mb-1 block text-sm font-medium text-slate-700">Asignación (curso — asignatura)</label>
-      <select
-        [ngModel]="selectedAssignmentId()"
-        (ngModelChange)="selectAssignment($event)"
-        class="w-full max-w-md rounded-lg border border-slate-300 px-3 py-2 text-sm"
-      >
-        @for (a of assignments(); track a.id) {
-          <option [value]="a.id">{{ courseName(a.cursoId) }} — {{ subjectName(a.asignaturaId) }}</option>
-        }
-      </select>
+  <div class="mb-6 flex flex-wrap items-end justify-between gap-4">
+    <div class="flex flex-wrap items-end gap-4">
+      <div>
+        <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Asignación (curso — asignatura)</label>
+        <select
+          [ngModel]="selectedAssignmentId()"
+          (ngModelChange)="selectAssignment($event)"
+          class="w-full max-w-md rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#003366] focus:outline-none focus:ring-1 focus:ring-[#003366]"
+        >
+          @for (a of assignments(); track a.id) {
+            <option [value]="a.id">{{ courseName(a.cursoId) }} — {{ subjectName(a.asignaturaId) }}</option>
+          }
+        </select>
+      </div>
+      <div>
+        <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Fecha</label>
+        <input
+          type="date"
+          [ngModel]="fecha()"
+          (ngModelChange)="fecha.set($event)"
+          class="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#003366] focus:outline-none focus:ring-1 focus:ring-[#003366]"
+        />
+      </div>
     </div>
-    <div>
-      <label class="mb-1 block text-sm font-medium text-slate-700">Fecha</label>
-      <input type="date" [ngModel]="fecha()" (ngModelChange)="fecha.set($event)" class="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+  </div>
+
+  <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="card">
+      <p class="text-xs font-medium text-slate-500">Total estudiantes</p>
+      <p class="mt-1 text-2xl font-semibold text-slate-900">{{ students().length }}</p>
+    </div>
+    <div class="card">
+      <p class="text-xs font-medium text-slate-500">Presente</p>
+      <p class="mt-1 text-2xl font-semibold text-green-600">{{ totalPresentes() }}</p>
+    </div>
+    <div class="card">
+      <p class="text-xs font-medium text-slate-500">Ausente</p>
+      <p class="mt-1 text-2xl font-semibold text-[#d92d20]">{{ totalAusentes() }}</p>
+    </div>
+    <div class="card">
+      <p class="text-xs font-medium text-slate-500">Atraso</p>
+      <p class="mt-1 text-2xl font-semibold text-amber-600">{{ totalTardanzas() }}</p>
     </div>
   </div>
 
@@ -24,8 +50,8 @@
     <table class="min-w-full divide-y divide-slate-200 text-sm">
       <thead class="bg-slate-50">
         <tr>
-          <th class="px-4 py-2 text-left font-medium text-slate-500">Estudiante</th>
-          <th class="px-4 py-2 text-left font-medium text-slate-500">Marcar</th>
+          <th class="px-4 py-2 text-left font-medium text-slate-500">Nombre del estudiante</th>
+          <th class="px-4 py-2 text-left font-medium text-slate-500">Marcar asistencia</th>
           <th class="px-4 py-2 text-left font-medium text-slate-500">Estado</th>
         </tr>
       </thead>
@@ -39,9 +65,18 @@
                   <button
                     type="button"
                     (click)="mark(student.id, estado)"
-                    class="rounded-lg border border-slate-300 px-2 py-1 text-xs hover:bg-slate-100"
+                    class="rounded-lg border px-3 py-1 text-xs font-medium transition"
+                    [class]="
+                      marks()[student.id] === estado
+                        ? (estado === EstadoAsistencia.PRESENTE
+                            ? 'border-green-500 bg-green-100 text-green-700'
+                            : estado === EstadoAsistencia.TARDANZA
+                              ? 'border-amber-500 bg-amber-100 text-amber-700'
+                              : 'border-[#d92d20] bg-[#fee4e2] text-[#d92d20]')
+                        : 'border-slate-300 text-slate-600 hover:bg-slate-100'
+                    "
                   >
-                    {{ estado }}
+                    {{ estadoLabel(estado) }}
                   </button>
                 }
               </div>

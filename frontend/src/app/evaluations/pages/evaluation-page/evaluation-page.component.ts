@@ -6,12 +6,13 @@ import { CoursesService } from '../../../courses/courses.service';
 import { StudentsService } from '../../../students/students.service';
 import { EvaluationsService } from '../../evaluations.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { TopBarComponent } from '../../../shared/components/top-bar/top-bar.component';
 import { AsignacionDocente, Asignatura, Competencia, Curso, Estudiante, PeriodoEvaluativo, ActividadEvaluacion } from '../../../core/models/domain.model';
 
 @Component({
   selector: 'app-evaluation-page',
   standalone: true,
-  imports: [ReactiveFormsModule, FormsModule],
+  imports: [ReactiveFormsModule, FormsModule, TopBarComponent],
   templateUrl: './evaluation-page.component.html',
 })
 export class EvaluationPageComponent {
@@ -107,5 +108,13 @@ export class EvaluationPageComponent {
     const nota = this.gradeFor(actividadId, estudianteId);
     if (nota == null) return;
     this.evaluationsService.registerGrade(actividadId, estudianteId, nota).subscribe();
+  }
+
+  gradeCellClass(actividadId: string, estudianteId: string) {
+    const nota = this.gradeFor(actividadId, estudianteId);
+    if (nota == null) return 'border-slate-300';
+    if (nota < 60) return 'border-[#d92d20] bg-[#fee4e2] text-[#d92d20] font-semibold';
+    if (nota < 80) return 'border-amber-300 bg-amber-50 text-amber-700';
+    return 'border-green-300 bg-green-50 text-green-700';
   }
 }

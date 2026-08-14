@@ -55,4 +55,10 @@ export class ShellComponent {
   logout() {
     this.authService.logout();
   }
+
+  initials() {
+    const user = this.authService.user();
+    if (!user) return '';
+    return `${user.nombres?.[0] ?? ''}${user.apellidos?.[0] ?? ''}`.toUpperCase();
+  }
 }
