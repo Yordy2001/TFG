@@ -32,6 +32,28 @@
 $ npm install
 ```
 
+## Base de datos (PostgreSQL vía Docker)
+
+```bash
+# copiar variables de entorno de ejemplo
+$ cp .env.example .env
+$ cp ../.env.example ../.env
+
+# levantar PostgreSQL (desde la raíz del repo)
+$ docker compose up -d
+
+# verificar que el contenedor está saludable
+$ docker compose ps
+
+# generar el cliente de Prisma
+$ npm run prisma:generate
+
+# detener PostgreSQL
+$ docker compose down
+```
+
+Nota: aún no existen tablas ni migraciones. Este paso solo habilita la conexión de NestJS a PostgreSQL.
+
 ## Compile and run the project
 
 ```bash

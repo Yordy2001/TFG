@@ -1,0 +1,12 @@
+// Esquema de Prisma para GuardianEdu.
+// Ticket GDE-001: solo se establece la conexión a PostgreSQL.
+// No se definen modelos/tablas todavía; eso corresponde a un ticket futuro.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
