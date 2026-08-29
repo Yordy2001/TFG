@@ -1,0 +1,56 @@
+<div class="p-6">
+  <app-top-bar title="Centro Educativo" eyebrow="Sistema de Alerta Temprana" />
+
+  @if (loading()) {
+    <p class="text-sm text-slate-500">Cargando información del centro educativo...</p>
+  } @else if (error()) {
+    <div class="card">
+      <p class="mb-3 text-sm text-[#d92d20]">{{ error() }}</p>
+      <button type="button" class="btn-secondary" (click)="load()">Reintentar</button>
+    </div>
+  } @else if (centro(); as c) {
+    <div class="card">
+      <div class="mb-4 flex items-center gap-3 border-b border-slate-100 pb-4">
+        <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-[#003366] text-white">
+          <span class="text-lg font-semibold">{{ c.nombre[0] }}</span>
+        </div>
+        <div>
+          <h1 class="text-lg font-semibold text-slate-900">{{ c.nombre }}</h1>
+          <p class="text-xs text-slate-500">Código institucional: {{ c.codigo }}</p>
+        </div>
+        <span class="ml-auto rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-800">Activo</span>
+      </div>
+
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div>
+          <p class="text-xs font-medium text-slate-400">Director(a)</p>
+          <p class="text-sm text-slate-700">{{ c.director }}</p>
+        </div>
+        <div>
+          <p class="text-xs font-medium text-slate-400">Teléfono</p>
+          <p class="text-sm text-slate-700">{{ c.telefono }}</p>
+        </div>
+        <div>
+          <p class="text-xs font-medium text-slate-400">Regional</p>
+          <p class="text-sm text-slate-700">{{ c.regional }}</p>
+        </div>
+        <div>
+          <p class="text-xs font-medium text-slate-400">Distrito educativo</p>
+          <p class="text-sm text-slate-700">{{ c.distritoEducativo }}</p>
+        </div>
+        <div>
+          <p class="text-xs font-medium text-slate-400">Provincia</p>
+          <p class="text-sm text-slate-700">{{ c.provincia }}</p>
+        </div>
+        <div>
+          <p class="text-xs font-medium text-slate-400">Municipio</p>
+          <p class="text-sm text-slate-700">{{ c.municipio }}</p>
+        </div>
+      </div>
+    </div>
+  } @else {
+    <div class="card">
+      <p class="text-sm text-slate-400">No hay información registrada para su centro educativo.</p>
+    </div>
+  }
+</div>

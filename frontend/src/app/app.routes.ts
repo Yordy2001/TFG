@@ -82,6 +82,11 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./profile/pages/profile-page/profile-page.component').then((m) => m.ProfilePageComponent),
       },
+      {
+        path: 'school',
+        loadComponent: () =>
+          import('./schools/pages/school-page/school-page.component').then((m) => m.SchoolPageComponent),
+      },
     ],
   },
   { path: '**', redirectTo: '' },

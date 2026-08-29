@@ -43,6 +43,7 @@ export class ShellComponent {
       roles: [Role.ORIENTADOR],
     },
     { label: 'Usuarios', path: '/users', icon: 'manage_accounts', roles: [Role.ADMINISTRADOR] },
+    { label: 'Centro Educativo', path: '/school', icon: 'apartment' },
   ];
 
   constructor(readonly authService: AuthService) {}
