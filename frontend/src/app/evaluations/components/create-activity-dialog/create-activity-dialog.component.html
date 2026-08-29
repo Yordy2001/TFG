@@ -1,0 +1,63 @@
+<h2 mat-dialog-title class="text-base font-semibold text-slate-900">Nueva actividad de evaluación</h2>
+
+<form [formGroup]="form" (ngSubmit)="submit()">
+  <mat-dialog-content>
+    <div class="w-[480px] max-w-full grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div class="sm:col-span-2">
+        <label class="mb-1 block text-xs font-medium text-slate-700">Nombre</label>
+        <input
+          formControlName="nombre"
+          placeholder="Examen"
+          class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+        />
+        @if (form.controls.nombre.invalid && form.controls.nombre.touched) {
+          <p class="mt-1 text-xs text-[#d92d20]">El nombre es obligatorio.</p>
+        }
+      </div>
+      <div>
+        <label class="mb-1 block text-xs font-medium text-slate-700">Competencia</label>
+        <select formControlName="competencia" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+          @for (c of competencias; track c) {
+            <option [value]="c">{{ c }}</option>
+          }
+        </select>
+      </div>
+      <div>
+        <label class="mb-1 block text-xs font-medium text-slate-700">Peso (%)</label>
+        <input type="number" formControlName="porcentaje" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+        @if (form.controls.porcentaje.invalid && form.controls.porcentaje.touched) {
+          <p class="mt-1 text-xs text-[#d92d20]">Debe estar entre 1 y 100.</p>
+        }
+      </div>
+      <div>
+        <label class="mb-1 block text-xs font-medium text-slate-700">Período</label>
+        <select formControlName="periodoEvaluativo" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+          @for (p of periodos; track p) {
+            <option [value]="p">{{ p }}</option>
+          }
+        </select>
+      </div>
+      <div>
+        <label class="mb-1 block text-xs font-medium text-slate-700">Fecha</label>
+        <input type="date" formControlName="fecha" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+        @if (form.controls.fecha.invalid && form.controls.fecha.touched) {
+          <p class="mt-1 text-xs text-[#d92d20]">La fecha es obligatoria.</p>
+        }
+      </div>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button
+      type="button"
+      [disabled]="saving()"
+      (click)="cancel()"
+      class="rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-50"
+    >
+      Cancelar
+    </button>
+    <button type="submit" [disabled]="saving()" class="btn-primary">
+      {{ saving() ? 'Guardando…' : 'Agregar actividad' }}
+    </button>
+  </mat-dialog-actions>
+</form>

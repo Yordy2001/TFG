@@ -1,65 +1,25 @@
 <div class="p-6">
   <app-top-bar title="Registro de Calificaciones" eyebrow="Sistema de Alerta Temprana" />
 
-  <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <div class="mb-6 flex flex-wrap items-end justify-between gap-4">
     <div>
       <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Asignación (curso — asignatura)</label>
       <select
         [ngModel]="selectedAssignmentId()"
         (ngModelChange)="selectAssignment($event)"
-        class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#003366] focus:outline-none focus:ring-1 focus:ring-[#003366]"
+        class="w-full max-w-md rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#003366] focus:outline-none focus:ring-1 focus:ring-[#003366]"
       >
         @for (a of assignments(); track a.id) {
           <option [value]="a.id">{{ courseName(a.cursoId) }} — {{ subjectName(a.asignaturaId) }}</option>
         }
       </select>
     </div>
+    @if (selectedAssignment()) {
+      <button type="button" (click)="openCreateActivityDialog()" class="btn-primary">Agregar actividad</button>
+    }
   </div>
 
   @if (selectedAssignment(); as assignment) {
-    <div class="card mb-6">
-      <h2 class="mb-3 text-sm font-semibold text-slate-700">Nueva actividad de evaluación</h2>
-      <form [formGroup]="form" (ngSubmit)="createActivity()" class="grid grid-cols-1 gap-3 sm:grid-cols-5 sm:items-end">
-        <div class="sm:col-span-2">
-          <label class="mb-1 block text-xs font-medium text-slate-700">Nombre</label>
-          <input formControlName="nombre" placeholder="Examen" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
-        </div>
-        <div>
-          <label class="mb-1 block text-xs font-medium text-slate-700">Competencia</label>
-          <select formControlName="competencia" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
-            @for (c of competencias; track c) {
-              <option [value]="c">{{ c }}</option>
-            }
-          </select>
-        </div>
-        <div>
-          <label class="mb-1 block text-xs font-medium text-slate-700">Peso (%)</label>
-          <input type="number" formControlName="porcentaje" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
-        </div>
-        <div>
-          <label class="mb-1 block text-xs font-medium text-slate-700">Período</label>
-          <select formControlName="periodoEvaluativo" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
-            @for (p of periodos; track p) {
-              <option [value]="p">{{ p }}</option>
-            }
-          </select>
-        </div>
-        <div>
-          <label class="mb-1 block text-xs font-medium text-slate-700">Fecha</label>
-          <input type="date" formControlName="fecha" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
-        </div>
-        <div class="sm:col-span-5">
-          <button type="submit" class="btn-primary" [disabled]="form.invalid || savingActivity()">
-            @if (savingActivity()) {
-              Guardando…
-            } @else {
-              Agregar actividad
-            }
-          </button>
-        </div>
-      </form>
-    </div>
-
     <div class="card overflow-x-auto">
       <h2 class="mb-3 text-sm font-semibold text-slate-700">Registro de calificaciones</h2>
       <table class="min-w-full divide-y divide-slate-200 text-sm">

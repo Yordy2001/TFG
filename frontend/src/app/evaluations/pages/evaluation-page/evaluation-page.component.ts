@@ -1,7 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
+import { MatDialog } from '@angular/material/dialog';
 import { SubjectsService } from '../../../subjects/subjects.service';
 import { CoursesService } from '../../../courses/courses.service';
 import { StudentsService } from '../../../students/students.service';
@@ -9,12 +9,13 @@ import { EvaluationsService } from '../../evaluations.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { TopBarComponent } from '../../../shared/components/top-bar/top-bar.component';
-import { AsignacionDocente, Asignatura, Competencia, Curso, Estudiante, PeriodoEvaluativo, ActividadEvaluacion } from '../../../core/models/domain.model';
+import { CreateActivityDialogComponent } from '../../components/create-activity-dialog/create-activity-dialog.component';
+import { AsignacionDocente, Asignatura, Curso, Estudiante, ActividadEvaluacion } from '../../../core/models/domain.model';
 
 @Component({
   selector: 'app-evaluation-page',
   standalone: true,
-  imports: [ReactiveFormsModule, FormsModule, MatIconModule, TopBarComponent],
+  imports: [FormsModule, MatIconModule, TopBarComponent],
   templateUrl: './evaluation-page.component.html',
 })
 export class EvaluationPageComponent {
@@ -24,7 +25,7 @@ export class EvaluationPageComponent {
   private readonly evaluationsService = inject(EvaluationsService);
   private readonly authService = inject(AuthService);
   private readonly notification = inject(NotificationService);
-  private readonly fb = inject(FormBuilder);
+  private readonly dialog = inject(MatDialog);
 
   readonly assignments = signal<AsignacionDocente[]>([]);
   readonly courses = signal<Curso[]>([]);
@@ -34,22 +35,10 @@ export class EvaluationPageComponent {
   readonly students = signal<Estudiante[]>([]);
   readonly grades = signal<Record<string, Record<string, number>>>({});
   readonly savingGrades = signal<Record<string, boolean>>({});
-  readonly savingActivity = signal(false);
-
-  readonly competencias = Object.values(Competencia);
-  readonly periodos = Object.values(PeriodoEvaluativo);
 
   readonly selectedAssignment = computed(() =>
     this.assignments().find((a) => a.id === this.selectedAssignmentId()),
   );
-
-  readonly form = this.fb.group({
-    nombre: ['', Validators.required],
-    competencia: [Competencia.C1_COMUNICATIVA, Validators.required],
-    porcentaje: [10, [Validators.required, Validators.min(1), Validators.max(100)]],
-    periodoEvaluativo: [PeriodoEvaluativo.P1, Validators.required],
-    fecha: ['', Validators.required],
-  });
 
   constructor() {
     this.coursesService.findAll().subscribe((courses) => this.courses.set(courses));
@@ -83,22 +72,16 @@ export class EvaluationPageComponent {
     });
   }
 
-  createActivity() {
-    if (this.form.invalid || this.savingActivity()) return;
-    this.savingActivity.set(true);
-    this.evaluationsService
-      .createActivity({ ...this.form.getRawValue(), asignacionDocenteId: this.selectedAssignmentId() } as any)
-      .subscribe({
-        next: () => {
-          this.savingActivity.set(false);
-          this.notification.success('Actividad de evaluación creada correctamente.');
-          this.form.reset({ competencia: Competencia.C1_COMUNICATIVA, porcentaje: 10, periodoEvaluativo: PeriodoEvaluativo.P1 });
-          this.loadActivities();
-        },
-        error: (err) => {
-          this.savingActivity.set(false);
-          this.notification.error(err?.error?.message ?? 'No se pudo crear la actividad.');
-        },
+  openCreateActivityDialog() {
+    this.dialog
+      .open(CreateActivityDialogComponent, {
+        data: { asignacionDocenteId: this.selectedAssignmentId() },
+        width: '520px',
+        maxWidth: '95vw',
+      })
+      .afterClosed()
+      .subscribe((activity) => {
+        if (activity) this.activities.update((current) => [...current, activity]);
       });
   }
 
