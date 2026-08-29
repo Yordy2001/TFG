@@ -22,9 +22,24 @@ export interface CreateUserPayload {
   rol: Role;
 }
 
+export interface UpdateOwnProfilePayload {
+  nombres?: string;
+  apellidos?: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class UsersService {
   constructor(private readonly http: HttpClient) {}
+
+  findMe() {
+    return this.http.get<ApiResponse<UserRecord>>(`${API_BASE_URL}/users/me`).pipe(map((res) => res.data));
+  }
+
+  updateMe(payload: UpdateOwnProfilePayload) {
+    return this.http
+      .patch<ApiResponse<UserRecord>>(`${API_BASE_URL}/users/me`, payload)
+      .pipe(map((res) => res.data));
+  }
 
   findAll() {
     return this.http.get<ApiResponse<UserRecord[]>>(`${API_BASE_URL}/users`).pipe(map((res) => res.data));

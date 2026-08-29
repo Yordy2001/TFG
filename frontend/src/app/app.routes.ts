@@ -77,6 +77,11 @@ export const routes: Routes = [
         loadComponent: () => import('./users/pages/user-list/user-list.component').then((m) => m.UserListComponent),
         canActivate: [roleGuard([Role.ADMINISTRADOR])],
       },
+      {
+        path: 'profile',
+        loadComponent: () =>
+          import('./profile/pages/profile-page/profile-page.component').then((m) => m.ProfilePageComponent),
+      },
     ],
   },
   { path: '**', redirectTo: '' },

@@ -3,6 +3,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateOwnProfileDto } from './dto/update-own-profile.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Role } from '../../common/enums/role.enum';
 import { CurrentUser, AuthenticatedUser } from '../../common/decorators/current-user.decorator';
@@ -16,6 +17,11 @@ export class UsersController {
   @Get('me')
   findMe(@CurrentUser() user: AuthenticatedUser) {
     return this.usersService.findById(user.sub, user.centroId);
+  }
+
+  @Patch('me')
+  updateMe(@Body() dto: UpdateOwnProfileDto, @CurrentUser() user: AuthenticatedUser) {
+    return this.usersService.updateOwnProfile(user.sub, user.centroId, dto);
   }
 
   @Get()

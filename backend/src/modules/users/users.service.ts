@@ -3,6 +3,7 @@ import * as bcrypt from 'bcrypt';
 import { UsersRepository } from './users.repository';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateOwnProfileDto } from './dto/update-own-profile.dto';
 import { Usuario } from '../../common/interfaces/entities';
 
 export type SafeUser = Omit<Usuario, 'passwordHash'>;
@@ -45,6 +46,14 @@ export class UsersService {
   }
 
   update(id: string, centroId: string, dto: UpdateUserDto): SafeUser {
+    const usuario = this.usersRepository.update(id, centroId, dto);
+    if (!usuario) {
+      throw new NotFoundException('User not found');
+    }
+    return this.toSafe(usuario);
+  }
+
+  updateOwnProfile(id: string, centroId: string, dto: UpdateOwnProfileDto): SafeUser {
     const usuario = this.usersRepository.update(id, centroId, dto);
     if (!usuario) {
       throw new NotFoundException('User not found');

@@ -31,6 +31,13 @@ export class AuthService {
     return this.accessToken();
   }
 
+  /** Reflects self-service profile edits (GDE-007) in the cached user, e.g. so the top bar updates immediately. */
+  updateCurrentUser(patch: Partial<AuthUser>) {
+    const current = this.currentUser();
+    if (!current) return;
+    this.currentUser.set({ ...current, ...patch });
+  }
+
   login(email: string, password: string) {
     return this.http
       .post<ApiResponse<LoginResponse>>(`${API_BASE_URL}/auth/login`, { email, password })
