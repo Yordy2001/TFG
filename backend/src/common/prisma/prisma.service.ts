@@ -5,10 +5,7 @@ import { PrismaClient } from '@prisma/client';
 /**
  * Wraps PrismaClient so the connection lifecycle is tied to Nest's module
  * lifecycle and the required DATABASE_URL is validated on startup.
- *
- * Ticket GDE-001: only the connection is wired up here. No repository uses
- * this service yet; the in-memory MockDataStore remains the data source
- * until tables/migrations are introduced in a future ticket.
+ * All repositories query through this service; there is no in-memory store.
  */
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {

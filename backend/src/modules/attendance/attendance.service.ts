@@ -3,7 +3,7 @@ import { AttendanceRepository } from './attendance.repository';
 import { RegisterAttendanceDto } from './dto/attendance.dto';
 import { AcademicEngineService } from '../../common/engines/academic-engine.service';
 import { RiskEngineService } from '../../common/engines/risk-engine.service';
-import { MockDataStore } from '../../common/mock-data/mock-data.store';
+import { PrismaService } from '../../common/prisma/prisma.service';
 
 @Injectable()
 export class AttendanceService {
@@ -11,22 +11,23 @@ export class AttendanceService {
     private readonly attendanceRepository: AttendanceRepository,
     private readonly academicEngine: AcademicEngineService,
     private readonly riskEngine: RiskEngineService,
-    private readonly store: MockDataStore,
+    private readonly prisma: PrismaService,
   ) {}
 
-  register(dto: RegisterAttendanceDto, centroId: string) {
-    const estudiante = this.store.estudiantes.find((e) => e.id === dto.estudianteId && e.centroId === centroId);
+  async register(dto: RegisterAttendanceDto, centroId: string) {
+    const estudiante = await this.prisma.estudiante.findFirst({ where: { id: dto.estudianteId, centroId } });
     if (!estudiante) throw new NotFoundException('Student not found');
 
-    const registro = this.attendanceRepository.create({ ...dto, centroId });
-    this.riskEngine.recalcularYRegistrar(estudiante.id, estudiante.cursoId, centroId);
+    const registro = await this.attendanceRepository.create({ ...dto, centroId });
+    await this.riskEngine.recalcularYRegistrar(estudiante.id, estudiante.cursoId, centroId);
     return registro;
   }
 
-  summary(estudianteId: string) {
-    return {
-      historial: this.attendanceRepository.findByStudent(estudianteId),
-      ...this.academicEngine.porcentajeAsistencia(estudianteId),
-    };
+  async summary(estudianteId: string) {
+    const [historial, indicadores] = await Promise.all([
+      this.attendanceRepository.findByStudent(estudianteId),
+      this.academicEngine.porcentajeAsistencia(estudianteId),
+    ]);
+    return { historial, ...indicadores };
   }
 }

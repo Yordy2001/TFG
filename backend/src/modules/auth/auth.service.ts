@@ -4,6 +4,7 @@ import * as bcrypt from 'bcrypt';
 import { v4 as uuid } from 'uuid';
 import { UsersRepository } from '../users/users.repository';
 import { LoginDto } from './dto/login.dto';
+import { Usuario } from '../../common/interfaces/entities';
 
 interface JwtPayload {
   sub: string;
@@ -19,25 +20,25 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  private buildPayload(usuario: ReturnType<UsersRepository['findByEmail']>): JwtPayload {
+  private buildPayload(usuario: Usuario): JwtPayload {
     return {
-      sub: usuario!.id,
-      email: usuario!.email,
-      role: usuario!.rol,
-      centroId: usuario!.centroId,
+      sub: usuario.id,
+      email: usuario.email,
+      role: usuario.rol,
+      centroId: usuario.centroId,
     };
   }
 
-  private issueTokens(payload: JwtPayload) {
+  private async issueTokens(payload: JwtPayload) {
     const accessToken = this.jwtService.sign(payload, { expiresIn: '15m' });
     const refreshToken = uuid();
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-    this.usersRepository.saveRefreshToken(payload.sub, refreshToken, expiresAt);
+    await this.usersRepository.saveRefreshToken(payload.sub, refreshToken, expiresAt);
     return { accessToken, refreshToken };
   }
 
-  login(dto: LoginDto) {
-    const usuario = this.usersRepository.findByEmail(dto.email);
+  async login(dto: LoginDto) {
+    const usuario = await this.usersRepository.findByEmail(dto.email);
     if (!usuario || !usuario.activo) {
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -45,7 +46,7 @@ export class AuthService {
     if (!matches) {
       throw new UnauthorizedException('Invalid credentials');
     }
-    const tokens = this.issueTokens(this.buildPayload(usuario));
+    const tokens = await this.issueTokens(this.buildPayload(usuario));
     return {
       ...tokens,
       user: {
@@ -59,22 +60,21 @@ export class AuthService {
     };
   }
 
-  refresh(refreshToken: string) {
-    const record = this.usersRepository.findRefreshToken(refreshToken);
+  async refresh(refreshToken: string) {
+    const record = await this.usersRepository.findRefreshToken(refreshToken);
     if (!record || record.expiresAt < new Date()) {
       throw new UnauthorizedException('Invalid refresh token');
     }
-    const usuario = this.usersRepository.findById(record.usuarioId);
+    const usuario = await this.usersRepository.findById(record.usuarioId);
     if (!usuario || !usuario.activo) {
       throw new UnauthorizedException('Invalid refresh token');
     }
-    this.usersRepository.revokeRefreshToken(refreshToken);
-    const tokens = this.issueTokens(this.buildPayload(usuario));
-    return tokens;
+    await this.usersRepository.revokeRefreshToken(refreshToken);
+    return this.issueTokens(this.buildPayload(usuario));
   }
 
-  logout(refreshToken: string) {
-    this.usersRepository.revokeRefreshToken(refreshToken);
+  async logout(refreshToken: string) {
+    await this.usersRepository.revokeRefreshToken(refreshToken);
     return { loggedOut: true };
   }
 }

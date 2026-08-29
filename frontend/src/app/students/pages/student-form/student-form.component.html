@@ -3,8 +3,13 @@
 
   <form [formGroup]="form" (ngSubmit)="submit()" class="max-w-lg space-y-4 rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
     <div>
-      <label class="mb-1 block text-sm font-medium text-slate-700">Matrícula</label>
-      <input formControlName="matricula" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+      <label class="mb-1 block text-sm font-medium text-slate-700">Matrícula (RNE)</label>
+      <input
+        formControlName="matricula"
+        placeholder="Se genera automáticamente"
+        class="w-full cursor-not-allowed rounded-lg border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-500"
+      />
+      <p class="mt-1 text-xs text-slate-400">Se genera a partir del nombre, apellidos y fecha de registro.</p>
     </div>
     <div class="grid grid-cols-2 gap-4">
       <div>
@@ -38,6 +43,31 @@
           <option [value]="curso.id">{{ curso.nombre }}</option>
         }
       </select>
+    </div>
+
+    <div>
+      <label class="mb-1 block text-sm font-medium text-slate-700">Foto (opcional)</label>
+      <div class="flex items-center gap-4">
+        @if (photoPreviewUrl(); as preview) {
+          <img [src]="preview" alt="Vista previa de la foto seleccionada" class="h-16 w-16 rounded-full object-cover" />
+        } @else {
+          <div class="flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+            <span class="text-xs">Sin foto</span>
+          </div>
+        }
+        <div class="flex-1 space-y-1">
+          <input #photoInput type="file" accept="image/jpeg,image/png" (change)="onPhotoSelected($event)" class="block w-full text-sm" />
+          @if (photoFile()) {
+            <button type="button" (click)="removePhoto(photoInput)" class="text-xs font-medium text-slate-500 hover:text-[#d92d20]">
+              Quitar foto
+            </button>
+          }
+          <p class="text-xs text-slate-400">JPEG o PNG, máximo 2 MB.</p>
+        </div>
+      </div>
+      @if (photoError()) {
+        <p class="mt-1 text-sm text-red-600">{{ photoError() }}</p>
+      }
     </div>
 
     @if (errorMessage()) {

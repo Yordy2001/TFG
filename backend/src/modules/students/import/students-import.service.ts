@@ -15,6 +15,16 @@ const MIN_EDAD_ESPERADA = 5;
 const MAX_EDAD_ESPERADA = 25;
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
+interface RawRow {
+  fila: number;
+  matricula: string;
+  nombres: string;
+  apellidos: string;
+  sexo: string;
+  fechaNacimiento: string;
+  cursoNombre: string;
+}
+
 @Injectable()
 export class StudentsImportService {
   constructor(
@@ -44,12 +54,12 @@ export class StudentsImportService {
 
     let importados = 0;
     for (const row of importables) {
-      if (this.studentsRepository.findByMatricula(row.matricula)) {
+      if (await this.studentsRepository.findByMatricula(row.matricula)) {
         row.estado = 'error';
         row.errores.push('La matrícula ya existe en el sistema.');
         continue;
       }
-      this.studentsRepository.create({
+      await this.studentsRepository.create({
         centroId,
         cursoId: row.cursoId!,
         matricula: row.matricula,
@@ -59,6 +69,7 @@ export class StudentsImportService {
         fechaNacimiento: row.fechaNacimiento,
         activo: true,
         incidentesDisciplinarios: 0,
+        fotoArchivo: null,
       });
       importados += 1;
     }
@@ -69,6 +80,37 @@ export class StudentsImportService {
       rechazados: rows.length - importados,
       detalle: rows,
     };
+  }
+
+  private extractRows(sheet: ExcelJS.Worksheet, columnIndexByHeader: Map<string, number>): RawRow[] {
+    const cellText = (row: ExcelJS.Row, header: string): string => {
+      const colNumber = columnIndexByHeader.get(header.toLowerCase())!;
+      const value = row.getCell(colNumber).value;
+      if (value == null) return '';
+      if (value instanceof Date) return value.toISOString().slice(0, 10);
+      if (typeof value === 'object' && 'text' in (value as { text?: unknown })) {
+        return String((value as { text: unknown }).text ?? '').trim();
+      }
+      return String(value).trim();
+    };
+
+    const rows: RawRow[] = [];
+    sheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
+      if (rowNumber === 1) return;
+      const isRowEmpty = row.values ? (row.values as unknown[]).every((v) => v == null || v === '') : true;
+      if (isRowEmpty) return;
+
+      rows.push({
+        fila: rowNumber,
+        matricula: cellText(row, 'Matrícula'),
+        nombres: cellText(row, 'Nombres'),
+        apellidos: cellText(row, 'Apellidos'),
+        sexo: cellText(row, 'Sexo').toUpperCase(),
+        fechaNacimiento: cellText(row, 'Fecha de nacimiento'),
+        cursoNombre: cellText(row, 'Curso'),
+      });
+    });
+    return rows;
   }
 
   private async parseAndValidate(file: Express.Multer.File, centroId: string): Promise<ImportRowResult[]> {
@@ -105,35 +147,26 @@ export class StudentsImportService {
       throw new BadRequestException(`Faltan columnas obligatorias en el archivo: ${missing.join(', ')}.`);
     }
 
-    const cursos = this.coursesRepository.findAll(centroId);
-    const cursosPorNombre = new Map(cursos.map((c) => [c.nombre.trim().toLowerCase(), c]));
+    // Pass 1: extract raw cell values (synchronous — exceljs's eachRow doesn't support async callbacks).
+    const rawRows = this.extractRows(sheet, columnIndexByHeader);
+    if (rawRows.length === 0) {
+      throw new BadRequestException('El archivo no contiene filas de datos.');
+    }
 
-    const cellText = (row: ExcelJS.Row, header: string): string => {
-      const colNumber = columnIndexByHeader.get(header.toLowerCase())!;
-      const value = row.getCell(colNumber).value;
-      if (value == null) return '';
-      if (value instanceof Date) return value.toISOString().slice(0, 10);
-      if (typeof value === 'object' && 'text' in (value as { text?: unknown })) {
-        return String((value as { text: unknown }).text ?? '').trim();
-      }
-      return String(value).trim();
-    };
+    // Pass 2: batch-fetch everything needed to validate, then validate synchronously.
+    const [cursos, matriculasExistentes] = await Promise.all([
+      this.coursesRepository.findAll(centroId),
+      this.studentsRepository.findExistingMatriculas(
+        rawRows.map((r) => r.matricula).filter((m): m is string => !!m),
+      ),
+    ]);
+    const cursosPorNombre = new Map(cursos.map((c) => [c.nombre.trim().toLowerCase(), c]));
 
     const results: ImportRowResult[] = [];
     const matriculasVistas = new Map<string, number>();
 
-    sheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
-      if (rowNumber === 1) return;
-      const isRowEmpty = row.values ? (row.values as unknown[]).every((v) => v == null || v === '') : true;
-      if (isRowEmpty) return;
-
-      const matricula = cellText(row, 'Matrícula');
-      const nombres = cellText(row, 'Nombres');
-      const apellidos = cellText(row, 'Apellidos');
-      const sexoRaw = cellText(row, 'Sexo').toUpperCase();
-      const fechaNacimiento = cellText(row, 'Fecha de nacimiento');
-      const cursoNombre = cellText(row, 'Curso');
-
+    for (const raw of rawRows) {
+      const { fila, matricula, nombres, apellidos, sexo: sexoRaw, fechaNacimiento, cursoNombre } = raw;
       const errores: string[] = [];
       const advertencias: string[] = [];
 
@@ -147,13 +180,11 @@ export class StudentsImportService {
         errores.push(`Sexo inválido ("${sexoRaw}"). Use "M" o "F".`);
       }
 
-      let fechaValida = false;
       if (!fechaNacimiento) {
         errores.push('La fecha de nacimiento es obligatoria.');
       } else if (!DATE_PATTERN.test(fechaNacimiento) || Number.isNaN(Date.parse(fechaNacimiento))) {
         errores.push(`Fecha de nacimiento inválida ("${fechaNacimiento}"). Use el formato AAAA-MM-DD.`);
       } else {
-        fechaValida = true;
         const edad = this.calcularEdad(fechaNacimiento);
         if (edad < MIN_EDAD_ESPERADA || edad > MAX_EDAD_ESPERADA) {
           advertencias.push(`Edad fuera del rango esperado (${MIN_EDAD_ESPERADA}-${MAX_EDAD_ESPERADA} años): ${edad} años.`);
@@ -177,15 +208,15 @@ export class StudentsImportService {
         if (filaPrevia) {
           errores.push(`Matrícula duplicada en el archivo (ya aparece en la fila ${filaPrevia}).`);
         } else {
-          matriculasVistas.set(matricula.toLowerCase(), rowNumber);
-          if (this.studentsRepository.findByMatricula(matricula)) {
+          matriculasVistas.set(matricula.toLowerCase(), fila);
+          if (matriculasExistentes.has(matricula)) {
             errores.push('La matrícula ya existe en el sistema.');
           }
         }
       }
 
       results.push({
-        fila: rowNumber,
+        fila,
         matricula,
         nombres,
         apellidos,
@@ -197,10 +228,6 @@ export class StudentsImportService {
         errores,
         advertencias,
       });
-    });
-
-    if (results.length === 0) {
-      throw new BadRequestException('El archivo no contiene filas de datos.');
     }
 
     return results;

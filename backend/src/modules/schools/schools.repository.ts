@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { MockDataStore } from '../../common/mock-data/mock-data.store';
+import { PrismaService } from '../../common/prisma/prisma.service';
 
 @Injectable()
 export class SchoolsRepository {
-  constructor(private readonly store: MockDataStore) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   findById(id: string) {
-    return this.store.centros.find((c) => c.id === id);
+    return this.prisma.centroEducativo.findUnique({ where: { id } });
   }
 }

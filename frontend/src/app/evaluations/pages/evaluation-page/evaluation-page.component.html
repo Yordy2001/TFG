@@ -15,7 +15,12 @@
       </select>
     </div>
     @if (selectedAssignment()) {
-      <button type="button" (click)="openCreateActivityDialog()" class="btn-primary">Agregar actividad</button>
+      <div class="flex items-center gap-2">
+        <button type="button" (click)="openCreateActivityDialog()" class="btn-secondary">Agregar actividad</button>
+        <button type="button" [disabled]="!hasDirtyGrades() || savingGrades()" (click)="saveAllGrades()" class="btn-primary">
+          {{ savingGrades() ? 'Guardando…' : 'Guardar calificación' }}
+        </button>
+      </div>
     }
   </div>
 
@@ -37,32 +42,21 @@
               <td class="px-2 py-2 font-medium text-slate-700">{{ student.nombres }} {{ student.apellidos }}</td>
               @for (act of activities(); track act.id) {
                 <td class="px-2 py-2">
-                  <div class="flex items-center gap-1">
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      [attr.aria-label]="'Calificación de ' + student.nombres + ' ' + student.apellidos + ' en ' + act.nombre"
-                      [disabled]="isSavingGrade(act.id, student.id)"
-                      class="w-20 rounded-lg border px-2 py-1 text-sm disabled:opacity-60"
-                      [class]="gradeCellClass(act.id, student.id)"
-                      [ngModel]="gradeFor(act.id, student.id)"
-                      (ngModelChange)="setGrade(act.id, student.id, $event)"
-                    />
-                    <button
-                      type="button"
-                      class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-[#003366] disabled:opacity-40"
-                      [attr.aria-label]="'Guardar calificación de ' + student.nombres + ' ' + student.apellidos + ' en ' + act.nombre"
-                      [disabled]="gradeFor(act.id, student.id) === null || isSavingGrade(act.id, student.id)"
-                      (click)="saveGrade(act.id, student.id)"
-                    >
-                      @if (isSavingGrade(act.id, student.id)) {
-                        <span class="text-xs">…</span>
-                      } @else {
-                        <mat-icon class="!h-4 !w-4 !text-[16px]">save</mat-icon>
-                      }
-                    </button>
-                  </div>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    maxlength="3"
+                    inputmode="numeric"
+                    [attr.aria-label]="'Calificación de ' + student.nombres + ' ' + student.apellidos + ' en ' + act.nombre"
+                    [disabled]="savingGrades()"
+                    class="w-20 rounded-lg border px-2 py-1 text-sm disabled:opacity-60"
+                    [class]="gradeCellClass(act.id, student.id) + (isDirty(act.id, student.id) ? ' ring-1 ring-amber-400' : '')"
+                    [ngModel]="gradeFor(act.id, student.id)"
+                    (ngModelChange)="setGrade(act.id, student.id, $event)"
+                    (keydown)="onGradeKeydown($event)"
+                    (paste)="onGradePaste($event)"
+                  />
                 </td>
               }
             </tr>

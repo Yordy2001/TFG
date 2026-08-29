@@ -14,11 +14,11 @@ export class ClassroomObservationsService {
     private readonly subjectsRepository: SubjectsRepository,
   ) {}
 
-  private ensureDocenteAsignadoAlEstudiante(estudianteId: string, centroId: string, docenteId: string) {
-    const estudiante = this.studentsRepository.findById(estudianteId, centroId);
+  private async ensureDocenteAsignadoAlEstudiante(estudianteId: string, centroId: string, docenteId: string) {
+    const estudiante = await this.studentsRepository.findById(estudianteId, centroId);
     if (!estudiante) throw new NotFoundException('Student not found');
 
-    const asignaciones = this.subjectsRepository.findAssignments(centroId, docenteId);
+    const asignaciones = await this.subjectsRepository.findAssignments(centroId, docenteId);
     const tieneAsignacion = asignaciones.some((a) => a.cursoId === estudiante.cursoId);
     if (!tieneAsignacion) {
       throw new ForbiddenException('No tiene una asignación docente para el curso de este estudiante.');
@@ -27,16 +27,16 @@ export class ClassroomObservationsService {
     return estudiante;
   }
 
-  findByStudent(estudianteId: string, centroId: string, docenteId: string) {
-    this.ensureDocenteAsignadoAlEstudiante(estudianteId, centroId, docenteId);
+  async findByStudent(estudianteId: string, centroId: string, docenteId: string) {
+    await this.ensureDocenteAsignadoAlEstudiante(estudianteId, centroId, docenteId);
     return this.observationsRepository.findByStudent(estudianteId, centroId);
   }
 
-  create(dto: CreateClassroomObservationDto, centroId: string, docenteId: string) {
-    const estudiante = this.ensureDocenteAsignadoAlEstudiante(dto.estudianteId, centroId, docenteId);
+  async create(dto: CreateClassroomObservationDto, centroId: string, docenteId: string) {
+    const estudiante = await this.ensureDocenteAsignadoAlEstudiante(dto.estudianteId, centroId, docenteId);
 
     if (dto.asignaturaId) {
-      const asignaciones = this.subjectsRepository.findAssignments(centroId, docenteId);
+      const asignaciones = await this.subjectsRepository.findAssignments(centroId, docenteId);
       const asignaturaValida = asignaciones.some(
         (a) => a.cursoId === estudiante.cursoId && a.asignaturaId === dto.asignaturaId,
       );
@@ -45,7 +45,7 @@ export class ClassroomObservationsService {
       }
     }
 
-    const observacion = this.observationsRepository.create({
+    const observacion = await this.observationsRepository.create({
       centroId,
       estudianteId: dto.estudianteId,
       cursoId: estudiante.cursoId,
@@ -60,26 +60,26 @@ export class ClassroomObservationsService {
     return observacion;
   }
 
-  update(id: string, centroId: string, docenteId: string, dto: UpdateClassroomObservationDto) {
-    const observacion = this.observationsRepository.findById(id, centroId);
+  async update(id: string, centroId: string, docenteId: string, dto: UpdateClassroomObservationDto) {
+    const observacion = await this.observationsRepository.findById(id, centroId);
     if (!observacion) throw new NotFoundException('Observation not found');
     if (observacion.docenteId !== docenteId) {
       throw new ForbiddenException('Solo el docente autor puede editar esta observación.');
     }
 
-    const updated = this.observationsRepository.update(id, centroId, dto);
+    const updated = await this.observationsRepository.update(id, centroId, dto);
     this.logger.log(`Observación de aula actualizada (id=${id}, docenteId=${docenteId})`);
     return updated;
   }
 
-  remove(id: string, centroId: string, docenteId: string) {
-    const observacion = this.observationsRepository.findById(id, centroId);
+  async remove(id: string, centroId: string, docenteId: string) {
+    const observacion = await this.observationsRepository.findById(id, centroId);
     if (!observacion) throw new NotFoundException('Observation not found');
     if (observacion.docenteId !== docenteId) {
       throw new ForbiddenException('Solo el docente autor puede eliminar esta observación.');
     }
 
-    this.observationsRepository.remove(id, centroId);
+    await this.observationsRepository.remove(id, centroId);
     this.logger.log(`Observación de aula eliminada (id=${id}, docenteId=${docenteId})`);
     return { id };
   }

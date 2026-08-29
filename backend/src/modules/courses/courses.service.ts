@@ -10,8 +10,8 @@ export class CoursesService {
     return this.coursesRepository.findAll(centroId);
   }
 
-  findOne(id: string, centroId: string) {
-    const curso = this.coursesRepository.findById(id, centroId);
+  async findOne(id: string, centroId: string) {
+    const curso = await this.coursesRepository.findById(id, centroId);
     if (!curso) throw new NotFoundException('Course not found');
     return curso;
   }
@@ -20,17 +20,17 @@ export class CoursesService {
     return this.coursesRepository.create({ ...dto, centroId });
   }
 
-  update(id: string, centroId: string, dto: UpdateCourseDto) {
-    const curso = this.coursesRepository.update(id, centroId, dto);
+  async update(id: string, centroId: string, dto: UpdateCourseDto) {
+    const curso = await this.coursesRepository.update(id, centroId, dto);
     if (!curso) throw new NotFoundException('Course not found');
     return curso;
   }
 
-  remove(id: string, centroId: string) {
-    if (this.coursesRepository.hasStudents(id)) {
+  async remove(id: string, centroId: string) {
+    if (await this.coursesRepository.hasStudents(id)) {
       throw new BadRequestException('Cannot delete a course that has students');
     }
-    const removed = this.coursesRepository.remove(id, centroId);
+    const removed = await this.coursesRepository.remove(id, centroId);
     if (!removed) throw new NotFoundException('Course not found');
     return { removed: true };
   }

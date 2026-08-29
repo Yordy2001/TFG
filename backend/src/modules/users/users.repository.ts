@@ -1,48 +1,44 @@
 import { Injectable } from '@nestjs/common';
-import { v4 as uuid } from 'uuid';
-import { MockDataStore } from '../../common/mock-data/mock-data.store';
+import { PrismaService } from '../../common/prisma/prisma.service';
 import { Usuario } from '../../common/interfaces/entities';
 
 @Injectable()
 export class UsersRepository {
-  constructor(private readonly store: MockDataStore) {}
+  constructor(private readonly prisma: PrismaService) {}
 
-  findByEmail(email: string): Usuario | undefined {
-    return this.store.usuarios.find((u) => u.email.toLowerCase() === email.toLowerCase());
+  findByEmail(email: string): Promise<Usuario | null> {
+    return this.prisma.usuario.findFirst({ where: { email: { equals: email, mode: 'insensitive' } } });
   }
 
-  findById(id: string): Usuario | undefined {
-    return this.store.usuarios.find((u) => u.id === id);
+  findById(id: string): Promise<Usuario | null> {
+    return this.prisma.usuario.findUnique({ where: { id } });
   }
 
-  findAllByCentro(centroId: string): Usuario[] {
-    return this.store.usuarios.filter((u) => u.centroId === centroId);
+  findAllByCentro(centroId: string): Promise<Usuario[]> {
+    return this.prisma.usuario.findMany({ where: { centroId } });
   }
 
-  create(data: Omit<Usuario, 'id' | 'createdAt' | 'updatedAt'>): Usuario {
-    const now = new Date();
-    const usuario: Usuario = { ...data, id: uuid(), createdAt: now, updatedAt: now };
-    this.store.usuarios.push(usuario);
-    return usuario;
+  create(data: Omit<Usuario, 'id' | 'createdAt' | 'updatedAt'>): Promise<Usuario> {
+    // Local domain enums (e.g. Role) are structurally identical to, but nominally
+    // distinct from, the Prisma-generated enums — safe to cast at this boundary.
+    return this.prisma.usuario.create({ data: data as never });
   }
 
-  update(id: string, centroId: string, data: Partial<Usuario>): Usuario | undefined {
-    const usuario = this.store.usuarios.find((u) => u.id === id && u.centroId === centroId);
-    if (!usuario) return undefined;
-    Object.assign(usuario, data, { updatedAt: new Date() });
-    return usuario;
+  async update(id: string, centroId: string, data: Partial<Usuario>): Promise<Usuario | undefined> {
+    const result = await this.prisma.usuario.updateMany({ where: { id, centroId }, data: data as never });
+    if (result.count === 0) return undefined;
+    return (await this.findById(id)) ?? undefined;
   }
 
-  saveRefreshToken(usuarioId: string, token: string, expiresAt: Date) {
-    this.store.refreshTokens.push({ id: uuid(), usuarioId, token, expiresAt, revoked: false });
+  async saveRefreshToken(usuarioId: string, token: string, expiresAt: Date) {
+    await this.prisma.refreshTokenRecord.create({ data: { usuarioId, token, expiresAt, revoked: false } });
   }
 
   findRefreshToken(token: string) {
-    return this.store.refreshTokens.find((t) => t.token === token && !t.revoked);
+    return this.prisma.refreshTokenRecord.findFirst({ where: { token, revoked: false } });
   }
 
-  revokeRefreshToken(token: string) {
-    const record = this.store.refreshTokens.find((t) => t.token === token);
-    if (record) record.revoked = true;
+  async revokeRefreshToken(token: string) {
+    await this.prisma.refreshTokenRecord.updateMany({ where: { token }, data: { revoked: true } });
   }
 }

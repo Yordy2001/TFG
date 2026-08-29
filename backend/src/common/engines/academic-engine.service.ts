@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { MockDataStore } from '../mock-data/mock-data.store';
+import { PrismaService } from '../prisma/prisma.service';
 import { EstadoAsistencia, PeriodoEvaluativo } from '../enums';
 
 export interface CompetenciaResultado {
@@ -21,47 +21,60 @@ export interface AsignaturaResultado {
  */
 @Injectable()
 export class AcademicEngineService {
-  constructor(private readonly store: MockDataStore) {}
+  constructor(private readonly prisma: PrismaService) {}
 
-  promedioPonderadoAsignacion(asignacionDocenteId: string, estudianteId: string, periodo: PeriodoEvaluativo): number {
-    const actividades = this.store.actividades.filter(
-      (a) => a.asignacionDocenteId === asignacionDocenteId && a.periodoEvaluativo === periodo,
-    );
+  async promedioPonderadoAsignacion(
+    asignacionDocenteId: string,
+    estudianteId: string,
+    periodo: PeriodoEvaluativo,
+  ): Promise<number> {
+    const actividades = await this.prisma.actividadEvaluacion.findMany({
+      where: { asignacionDocenteId, periodoEvaluativo: periodo as never },
+    });
     if (actividades.length === 0) return 0;
+
+    const registros = await this.prisma.registroEvaluacion.findMany({
+      where: { estudianteId, actividadId: { in: actividades.map((a) => a.id) } },
+    });
+    const registroPorActividad = new Map(registros.map((r) => [r.actividadId, r]));
 
     let acumulado = 0;
     let pesoConNota = 0;
     for (const actividad of actividades) {
-      const registro = this.store.registrosEvaluacion.find(
-        (r) => r.actividadId === actividad.id && r.estudianteId === estudianteId,
-      );
+      const registro = registroPorActividad.get(actividad.id);
       if (registro) {
         acumulado += (registro.nota * actividad.porcentaje) / 100;
         pesoConNota += actividad.porcentaje;
       }
     }
     if (pesoConNota === 0) return 0;
-    // Normalize in case not all activities have been graded yet.
     return Math.round((acumulado / pesoConNota) * 100 * 100) / 100;
   }
 
-  resultadosPorAsignatura(estudianteId: string, cursoId: string): AsignaturaResultado[] {
-    const asignaciones = this.store.asignacionesDocentes.filter((a) => a.cursoId === cursoId);
+  async resultadosPorAsignatura(estudianteId: string, cursoId: string): Promise<AsignaturaResultado[]> {
+    const asignaciones = await this.prisma.asignacionDocente.findMany({
+      where: { cursoId },
+      include: { asignatura: true },
+    });
+    if (asignaciones.length === 0) return [];
+
+    const actividades = await this.prisma.actividadEvaluacion.findMany({
+      where: { asignacionDocenteId: { in: asignaciones.map((a) => a.id) } },
+    });
+    const registros = await this.prisma.registroEvaluacion.findMany({
+      where: { estudianteId, actividadId: { in: actividades.map((a) => a.id) } },
+    });
+    const registroPorActividad = new Map(registros.map((r) => [r.actividadId, r]));
+
     const resultados: AsignaturaResultado[] = [];
-
     for (const asignacion of asignaciones) {
-      const asignatura = this.store.asignaturas.find((a) => a.id === asignacion.asignaturaId);
-      if (!asignatura) continue;
-
-      const actividades = this.store.actividades.filter((a) => a.asignacionDocenteId === asignacion.id);
+      const actividadesAsignacion = actividades.filter((a) => a.asignacionDocenteId === asignacion.id);
       const competenciaMap = new Map<string, { acumulado: number; peso: number }>();
       let acumuladoTotal = 0;
       let pesoTotal = 0;
 
-      for (const actividad of actividades) {
-        const registro = this.store.registrosEvaluacion.find(
-          (r) => r.actividadId === actividad.id && r.estudianteId === estudianteId,
-        );
+      for (const actividad of actividadesAsignacion) {
+        const registro = registroPorActividad.get(actividad.id);
         if (!registro) continue;
         acumuladoTotal += (registro.nota * actividad.porcentaje) / 100;
         pesoTotal += actividad.porcentaje;
@@ -81,8 +94,8 @@ export class AcademicEngineService {
       );
 
       resultados.push({
-        asignaturaId: asignatura.id,
-        asignaturaNombre: asignatura.nombre,
+        asignaturaId: asignacion.asignatura.id,
+        asignaturaNombre: asignacion.asignatura.nombre,
         promedioPeriodo,
         competencias,
       });
@@ -91,19 +104,22 @@ export class AcademicEngineService {
     return resultados;
   }
 
-  promedioGeneral(estudianteId: string, cursoId: string): number {
-    const resultados = this.resultadosPorAsignatura(estudianteId, cursoId);
+  async promedioGeneral(estudianteId: string, cursoId: string): Promise<number> {
+    const resultados = await this.resultadosPorAsignatura(estudianteId, cursoId);
     if (resultados.length === 0) return 0;
     const suma = resultados.reduce((acc, r) => acc + r.promedioPeriodo, 0);
     return Math.round((suma / resultados.length) * 100) / 100;
   }
 
-  asignaturasEnBajoRendimiento(estudianteId: string, cursoId: string, umbral = 70): number {
-    return this.resultadosPorAsignatura(estudianteId, cursoId).filter((r) => r.promedioPeriodo < umbral).length;
+  async asignaturasEnBajoRendimiento(estudianteId: string, cursoId: string, umbral = 70): Promise<number> {
+    const resultados = await this.resultadosPorAsignatura(estudianteId, cursoId);
+    return resultados.filter((r) => r.promedioPeriodo < umbral).length;
   }
 
-  porcentajeAsistencia(estudianteId: string): { asistencia: number; ausencias: number; tardanzas: number } {
-    const registros = this.store.asistencias.filter((a) => a.estudianteId === estudianteId);
+  async porcentajeAsistencia(
+    estudianteId: string,
+  ): Promise<{ asistencia: number; ausencias: number; tardanzas: number }> {
+    const registros = await this.prisma.asistenciaRegistro.findMany({ where: { estudianteId } });
     if (registros.length === 0) return { asistencia: 100, ausencias: 0, tardanzas: 0 };
 
     const presentes = registros.filter((r) => r.estado === EstadoAsistencia.PRESENTE).length;

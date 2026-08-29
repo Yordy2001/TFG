@@ -60,6 +60,7 @@ export interface Estudiante {
   fechaNacimiento: string;
   activo: boolean;
   incidentesDisciplinarios: number;
+  fotoArchivo: string | null;
 }
 
 export interface Asignatura {

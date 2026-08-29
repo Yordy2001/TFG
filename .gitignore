@@ -39,3 +39,6 @@ desktop.ini
 # Coverage
 coverage/
 *.png
+
+# Uploaded files (GDE-004)
+backend/uploads/

@@ -10,8 +10,8 @@ export class SubjectsService {
     return this.subjectsRepository.findAll(centroId);
   }
 
-  findOne(id: string, centroId: string) {
-    const asignatura = this.subjectsRepository.findById(id, centroId);
+  async findOne(id: string, centroId: string) {
+    const asignatura = await this.subjectsRepository.findById(id, centroId);
     if (!asignatura) throw new NotFoundException('Subject not found');
     return asignatura;
   }

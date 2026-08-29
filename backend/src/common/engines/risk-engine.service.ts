@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { v4 as uuid } from 'uuid';
-import { MockDataStore } from '../mock-data/mock-data.store';
+import { PrismaService } from '../prisma/prisma.service';
 import { AcademicEngineService } from './academic-engine.service';
 import { NivelRiesgo } from '../enums';
 import { HistorialRiesgo, Riesgo } from '../interfaces/entities';
@@ -26,23 +25,24 @@ function clasificar(porcentaje: number): NivelRiesgo {
 @Injectable()
 export class RiskEngineService {
   constructor(
-    private readonly store: MockDataStore,
+    private readonly prisma: PrismaService,
     private readonly academicEngine: AcademicEngineService,
   ) {}
 
-  private ultimoAjuste(estudianteId: string): number {
-    const historial = this.store.historialRiesgo
-      .filter((h) => h.estudianteId === estudianteId)
-      .sort((a, b) => b.fecha.getTime() - a.fecha.getTime());
-    return historial[0]?.ajusteAplicado ?? 0;
+  private async ultimoAjuste(estudianteId: string): Promise<number> {
+    const ultimo = await this.prisma.historialRiesgo.findFirst({
+      where: { estudianteId },
+      orderBy: { fecha: 'desc' },
+    });
+    return ultimo?.ajusteAplicado ?? 0;
   }
 
-  calcular(estudianteId: string, cursoId: string): { porcentajeSistema: number; nivel: NivelRiesgo } {
-    const estudiante = this.store.estudiantes.find((e) => e.id === estudianteId);
-    const promedio = this.academicEngine.promedioGeneral(estudianteId, cursoId);
-    const { ausencias } = this.academicEngine.porcentajeAsistencia(estudianteId);
-    const bajoRendimientoCount = this.academicEngine.asignaturasEnBajoRendimiento(estudianteId, cursoId);
-    const totalAsignaturas = this.academicEngine.resultadosPorAsignatura(estudianteId, cursoId).length || 1;
+  async calcular(estudianteId: string, cursoId: string): Promise<{ porcentajeSistema: number; nivel: NivelRiesgo }> {
+    const estudiante = await this.prisma.estudiante.findUnique({ where: { id: estudianteId } });
+    const promedio = await this.academicEngine.promedioGeneral(estudianteId, cursoId);
+    const { ausencias } = await this.academicEngine.porcentajeAsistencia(estudianteId);
+    const bajoRendimientoCount = await this.academicEngine.asignaturasEnBajoRendimiento(estudianteId, cursoId);
+    const totalAsignaturas = (await this.academicEngine.resultadosPorAsignatura(estudianteId, cursoId)).length || 1;
 
     const scorePromedio = Math.max(0, 100 - promedio); // lower average -> higher risk
     const scoreAsistencia = ausencias; // ausencias already expressed as %
@@ -59,72 +59,70 @@ export class RiskEngineService {
     return { porcentajeSistema: redondeado, nivel: clasificar(redondeado) };
   }
 
-  recalcularYRegistrar(estudianteId: string, cursoId: string, centroId: string): Riesgo {
-    const { porcentajeSistema } = this.calcular(estudianteId, cursoId);
-    const ajuste = this.ultimoAjuste(estudianteId);
+  async recalcularYRegistrar(estudianteId: string, cursoId: string, centroId: string): Promise<Riesgo> {
+    const { porcentajeSistema } = await this.calcular(estudianteId, cursoId);
+    const ajuste = await this.ultimoAjuste(estudianteId);
     const porcentajeFinal = Math.max(0, Math.min(100, porcentajeSistema + ajuste));
     const nivel = clasificar(porcentajeFinal);
     const fecha = new Date();
 
-    let riesgo = this.store.riesgos.find((r) => r.estudianteId === estudianteId);
-    if (!riesgo) {
-      riesgo = { id: uuid(), centroId, estudianteId, porcentaje: porcentajeFinal, nivel, fechaCalculo: fecha };
-      this.store.riesgos.push(riesgo);
-    } else {
-      riesgo.porcentaje = porcentajeFinal;
-      riesgo.nivel = nivel;
-      riesgo.fechaCalculo = fecha;
-    }
+    const riesgo = await this.prisma.riesgo.upsert({
+      where: { estudianteId },
+      create: { centroId, estudianteId, porcentaje: porcentajeFinal, nivel: nivel as never, fechaCalculo: fecha },
+      update: { porcentaje: porcentajeFinal, nivel: nivel as never, fechaCalculo: fecha },
+    });
 
-    this.registrarHistorial(estudianteId, centroId, porcentajeSistema, ajuste, null);
+    await this.registrarHistorial(estudianteId, centroId, porcentajeSistema, ajuste, null);
     return riesgo;
   }
 
-  private registrarHistorial(
+  private async registrarHistorial(
     estudianteId: string,
     centroId: string,
     porcentajeOriginal: number,
     ajusteAplicado: number,
     usuarioId: string | null,
-  ): HistorialRiesgo {
+  ): Promise<HistorialRiesgo> {
     const porcentajeFinal = Math.max(0, Math.min(100, porcentajeOriginal + ajusteAplicado));
-    const registro: HistorialRiesgo = {
-      id: uuid(),
-      centroId,
-      estudianteId,
-      porcentajeOriginal,
-      ajusteAplicado,
-      porcentajeFinal,
-      nivel: clasificar(porcentajeFinal),
-      usuarioId,
-      fecha: new Date(),
-    };
-    this.store.historialRiesgo.push(registro);
-    return registro;
+    return this.prisma.historialRiesgo.create({
+      data: {
+        centroId,
+        estudianteId,
+        porcentajeOriginal,
+        ajusteAplicado,
+        porcentajeFinal,
+        nivel: clasificar(porcentajeFinal) as never,
+        usuarioId,
+        fecha: new Date(),
+      },
+    });
   }
 
-  aplicarAjusteProfesional(estudianteId: string, cursoId: string, centroId: string, ajuste: number, usuarioId: string): Riesgo {
-    const { porcentajeSistema } = this.calcular(estudianteId, cursoId);
+  async aplicarAjusteProfesional(
+    estudianteId: string,
+    cursoId: string,
+    centroId: string,
+    ajuste: number,
+    usuarioId: string,
+  ): Promise<Riesgo> {
+    const { porcentajeSistema } = await this.calcular(estudianteId, cursoId);
     const porcentajeFinal = Math.max(0, Math.min(100, porcentajeSistema + ajuste));
     const nivel = clasificar(porcentajeFinal);
 
-    let riesgo = this.store.riesgos.find((r) => r.estudianteId === estudianteId);
-    if (!riesgo) {
-      riesgo = { id: uuid(), centroId, estudianteId, porcentaje: porcentajeFinal, nivel, fechaCalculo: new Date() };
-      this.store.riesgos.push(riesgo);
-    } else {
-      riesgo.porcentaje = porcentajeFinal;
-      riesgo.nivel = nivel;
-      riesgo.fechaCalculo = new Date();
-    }
+    const riesgo = await this.prisma.riesgo.upsert({
+      where: { estudianteId },
+      create: { centroId, estudianteId, porcentaje: porcentajeFinal, nivel: nivel as never, fechaCalculo: new Date() },
+      update: { porcentaje: porcentajeFinal, nivel: nivel as never, fechaCalculo: new Date() },
+    });
 
-    this.registrarHistorial(estudianteId, centroId, porcentajeSistema, ajuste, usuarioId);
+    await this.registrarHistorial(estudianteId, centroId, porcentajeSistema, ajuste, usuarioId);
     return riesgo;
   }
 
-  historial(estudianteId: string): HistorialRiesgo[] {
-    return this.store.historialRiesgo
-      .filter((h) => h.estudianteId === estudianteId)
-      .sort((a, b) => b.fecha.getTime() - a.fecha.getTime());
+  historial(estudianteId: string): Promise<HistorialRiesgo[]> {
+    return this.prisma.historialRiesgo.findMany({
+      where: { estudianteId },
+      orderBy: { fecha: 'desc' },
+    });
   }
 }

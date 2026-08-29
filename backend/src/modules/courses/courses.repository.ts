@@ -1,42 +1,36 @@
 import { Injectable } from '@nestjs/common';
-import { v4 as uuid } from 'uuid';
-import { MockDataStore } from '../../common/mock-data/mock-data.store';
+import { PrismaService } from '../../common/prisma/prisma.service';
 import { Curso } from '../../common/interfaces/entities';
 
 @Injectable()
 export class CoursesRepository {
-  constructor(private readonly store: MockDataStore) {}
+  constructor(private readonly prisma: PrismaService) {}
 
-  findAll(centroId: string): Curso[] {
-    return this.store.cursos.filter((c) => c.centroId === centroId);
+  findAll(centroId: string): Promise<Curso[]> {
+    return this.prisma.curso.findMany({ where: { centroId } });
   }
 
-  findById(id: string, centroId: string): Curso | undefined {
-    return this.store.cursos.find((c) => c.id === id && c.centroId === centroId);
+  findById(id: string, centroId: string): Promise<Curso | null> {
+    return this.prisma.curso.findFirst({ where: { id, centroId } });
   }
 
-  create(data: Omit<Curso, 'id' | 'createdAt' | 'updatedAt'>): Curso {
-    const now = new Date();
-    const curso: Curso = { ...data, id: uuid(), createdAt: now, updatedAt: now };
-    this.store.cursos.push(curso);
-    return curso;
+  create(data: Omit<Curso, 'id' | 'createdAt' | 'updatedAt'>): Promise<Curso> {
+    return this.prisma.curso.create({ data });
   }
 
-  update(id: string, centroId: string, data: Partial<Curso>): Curso | undefined {
-    const curso = this.findById(id, centroId);
-    if (!curso) return undefined;
-    Object.assign(curso, data, { updatedAt: new Date() });
-    return curso;
+  async update(id: string, centroId: string, data: Partial<Curso>): Promise<Curso | undefined> {
+    const result = await this.prisma.curso.updateMany({ where: { id, centroId }, data });
+    if (result.count === 0) return undefined;
+    return (await this.findById(id, centroId)) ?? undefined;
   }
 
-  hasStudents(cursoId: string): boolean {
-    return this.store.estudiantes.some((e) => e.cursoId === cursoId && e.activo);
+  async hasStudents(cursoId: string): Promise<boolean> {
+    const count = await this.prisma.estudiante.count({ where: { cursoId, activo: true } });
+    return count > 0;
   }
 
-  remove(id: string, centroId: string): boolean {
-    const idx = this.store.cursos.findIndex((c) => c.id === id && c.centroId === centroId);
-    if (idx === -1) return false;
-    this.store.cursos.splice(idx, 1);
-    return true;
+  async remove(id: string, centroId: string): Promise<boolean> {
+    const result = await this.prisma.curso.deleteMany({ where: { id, centroId } });
+    return result.count > 0;
   }
 }

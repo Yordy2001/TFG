@@ -1,4 +1,4 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, OnDestroy, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
@@ -35,15 +35,20 @@ const CATEGORIA_LABELS: Record<CategoriaObservacion, string> = {
   [CategoriaObservacion.OBSERVACION_ACADEMICA]: 'Observación académica',
 };
 
+const ALLOWED_PHOTO_TYPES = ['image/jpeg', 'image/png'];
+const MAX_PHOTO_SIZE_BYTES = 2 * 1024 * 1024;
+
 @Component({
   selector: 'app-student-detail',
   standalone: true,
   imports: [FormsModule, DatePipe, RiskBadgeComponent, StatCardComponent, TopBarComponent, MatIconModule],
   templateUrl: './student-detail.component.html',
 })
-export class StudentDetailComponent {
+export class StudentDetailComponent implements OnDestroy {
   readonly student = signal<Estudiante | null>(null);
   readonly course = signal<Curso | null>(null);
+  readonly photoUrl = signal<string | null>(null);
+  private photoObjectUrl: string | null = null;
   readonly riesgo = signal<Riesgo | null>(null);
   readonly historial = signal<HistorialRiesgo[]>([]);
   readonly resultados = signal<AsignaturaResultado[]>([]);
@@ -68,6 +73,11 @@ export class StudentDetailComponent {
   readonly isOrientador = computed(() => this.authService.user()?.role === Role.ORIENTADOR);
   readonly isDocente = computed(() => this.authService.user()?.role === Role.DOCENTE);
   readonly canSeeAcademic = computed(() => this.authService.user()?.role !== Role.ORIENTADOR);
+  readonly canManagePhoto = computed(() => {
+    const role = this.authService.user()?.role;
+    return role === Role.ADMINISTRADOR || role === Role.REGISTRO;
+  });
+  readonly savingPhoto = signal(false);
 
   private readonly estudianteId: string;
 
@@ -96,6 +106,10 @@ export class StudentDetailComponent {
         this.course.set(courses.find((c) => c.id === student.cursoId) ?? null);
       });
 
+      if (student.fotoArchivo) {
+        this.loadPhoto(student.id);
+      }
+
       this.evaluationsService.resultadosEstudiante(this.estudianteId, student.cursoId).subscribe((res) => {
         this.resultados.set(res.asignaturas);
         this.promedioGeneral.set(res.promedioGeneral);
@@ -113,6 +127,43 @@ export class StudentDetailComponent {
     if (this.authService.user()?.role === Role.ORIENTADOR) {
       this.followUpService.byStudent(this.estudianteId).subscribe((s) => this.seguimientos.set(s));
     }
+  }
+
+  private loadPhoto(studentId: string) {
+    this.studentsService.getPhotoBlob(studentId).subscribe((blob) => {
+      if (this.photoObjectUrl) URL.revokeObjectURL(this.photoObjectUrl);
+      this.photoObjectUrl = URL.createObjectURL(blob);
+      this.photoUrl.set(this.photoObjectUrl);
+    });
+  }
+
+  onPhotoSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+    input.value = '';
+    if (!file || this.savingPhoto()) return;
+
+    if (!ALLOWED_PHOTO_TYPES.includes(file.type)) {
+      this.notification.error('Formato no permitido. Use una imagen JPEG o PNG.');
+      return;
+    }
+    if (file.size > MAX_PHOTO_SIZE_BYTES) {
+      this.notification.error('La imagen supera el tamaño máximo permitido (2 MB).');
+      return;
+    }
+
+    this.savingPhoto.set(true);
+    this.studentsService.uploadPhoto(this.estudianteId, file).subscribe({
+      next: () => {
+        this.savingPhoto.set(false);
+        this.notification.success('Foto del estudiante actualizada correctamente.');
+        this.loadPhoto(this.estudianteId);
+      },
+      error: (err) => {
+        this.savingPhoto.set(false);
+        this.notification.error(err?.error?.message ?? 'No se pudo actualizar la foto.');
+      },
+    });
   }
 
   private loadClassroomObservations(cursoId: string) {
@@ -225,5 +276,9 @@ export class StudentDetailComponent {
         this.notification.error(message);
       },
     });
+  }
+
+  ngOnDestroy() {
+    if (this.photoObjectUrl) URL.revokeObjectURL(this.photoObjectUrl);
   }
 }

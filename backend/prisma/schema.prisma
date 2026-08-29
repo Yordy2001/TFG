@@ -1,6 +1,8 @@
 // Esquema de Prisma para GuardianEdu.
-// Ticket GDE-001: solo se establece la conexión a PostgreSQL.
-// No se definen modelos/tablas todavía; eso corresponde a un ticket futuro.
+// Migración de tablas para el centro educativo real (Santiago Oeste, Regional 08).
+// Los modelos reflejan uno a uno las entidades de src/common/interfaces/entities.ts.
+// Los repositorios de NestJS siguen usando MockDataStore por ahora; conectarlos a
+// Prisma es un cambio aparte, no incluido en esta migración.
 
 generator client {
   provider = "prisma-client-js"
@@ -9,4 +11,356 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMINISTRADOR
+  REGISTRO
+  DIRECTOR
+  DOCENTE
+  ORIENTADOR
+}
+
+enum Sexo {
+  M
+  F
+}
+
+enum NivelRiesgo {
+  BAJO
+  MEDIO
+  ALTO
+}
+
+enum EstadoAsistencia {
+  PRESENTE
+  AUSENTE
+  TARDANZA
+}
+
+enum EstadoSeguimiento {
+  ABIERTO
+  EN_PROCESO
+  CERRADO
+}
+
+enum Competencia {
+  C1_COMUNICATIVA
+  C2_LOGICO_CIENTIFICA
+  C3_ETICA_CIUDADANA
+}
+
+enum PeriodoEvaluativo {
+  P1
+  P2
+  P3
+  P4
+}
+
+enum CategoriaObservacion {
+  INCIDENTE
+  ACTITUD_POSITIVA
+  CONVIVENCIA
+  OBSERVACION_ACADEMICA
+}
+
+model CentroEducativo {
+  id                String   @id @default(uuid())
+  codigo            String   @unique
+  nombre            String
+  telefono          String
+  distritoEducativo String
+  regional          String
+  provincia         String
+  municipio         String
+  director          String
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  usuarios             Usuario[]
+  cursos               Curso[]
+  estudiantes          Estudiante[]
+  asignaturas          Asignatura[]
+  periodosAcademicos   PeriodoAcademico[]
+  asignacionesDocentes AsignacionDocente[]
+  actividades          ActividadEvaluacion[]
+  registrosEvaluacion  RegistroEvaluacion[]
+  asistencias          AsistenciaRegistro[]
+  seguimientos         SeguimientoOrientador[]
+  observacionesAula    ObservacionAula[]
+  riesgos              Riesgo[]
+  historialRiesgo      HistorialRiesgo[]
+
+  @@map("centros_educativos")
+}
+
+model Usuario {
+  id           String   @id @default(uuid())
+  centroId     String
+  rol          Role
+  nombres      String
+  apellidos    String
+  email        String   @unique
+  passwordHash String
+  activo       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  centro        CentroEducativo         @relation(fields: [centroId], references: [id])
+  asignaciones  AsignacionDocente[]     @relation("DocenteAsignaciones")
+  seguimientos  SeguimientoOrientador[] @relation("OrientadorSeguimientos")
+  observaciones ObservacionAula[]       @relation("DocenteObservaciones")
+  refreshTokens RefreshTokenRecord[]
+
+  @@index([centroId])
+  @@map("usuarios")
+}
+
+model Curso {
+  id         String   @id @default(uuid())
+  centroId   String
+  nombre     String
+  gradoNivel String
+  seccion    String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  centro        CentroEducativo     @relation(fields: [centroId], references: [id])
+  estudiantes   Estudiante[]
+  asignaciones  AsignacionDocente[]
+  observaciones ObservacionAula[]
+
+  @@index([centroId])
+  @@map("cursos")
+}
+
+model Estudiante {
+  id                       String   @id @default(uuid())
+  centroId                 String
+  cursoId                  String
+  matricula                String   @unique
+  nombres                  String
+  apellidos                String
+  sexo                     Sexo
+  fechaNacimiento          String
+  activo                   Boolean  @default(true)
+  incidentesDisciplinarios Int      @default(0)
+  fotoArchivo              String?
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
+  centro              CentroEducativo         @relation(fields: [centroId], references: [id])
+  curso               Curso                   @relation(fields: [cursoId], references: [id])
+  registrosEvaluacion RegistroEvaluacion[]
+  asistencias         AsistenciaRegistro[]
+  seguimientos        SeguimientoOrientador[]
+  observaciones       ObservacionAula[]
+  riesgos             Riesgo[]
+  historialRiesgo     HistorialRiesgo[]
+
+  @@index([centroId])
+  @@index([cursoId])
+  @@map("estudiantes")
+}
+
+model Asignatura {
+  id        String   @id @default(uuid())
+  centroId  String
+  nombre    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  centro        CentroEducativo     @relation(fields: [centroId], references: [id])
+  asignaciones  AsignacionDocente[]
+  observaciones ObservacionAula[]
+
+  @@index([centroId])
+  @@map("asignaturas")
+}
+
+model PeriodoAcademico {
+  id       String  @id @default(uuid())
+  centroId String
+  nombre   String
+  activo   Boolean @default(true)
+
+  centro       CentroEducativo     @relation(fields: [centroId], references: [id])
+  asignaciones AsignacionDocente[]
+
+  @@index([centroId])
+  @@map("periodos_academicos")
+}
+
+model AsignacionDocente {
+  id                 String @id @default(uuid())
+  centroId           String
+  docenteId          String
+  cursoId            String
+  asignaturaId       String
+  periodoAcademicoId String
+
+  centro           CentroEducativo      @relation(fields: [centroId], references: [id])
+  docente          Usuario              @relation("DocenteAsignaciones", fields: [docenteId], references: [id])
+  curso            Curso                @relation(fields: [cursoId], references: [id])
+  asignatura       Asignatura           @relation(fields: [asignaturaId], references: [id])
+  periodoAcademico PeriodoAcademico     @relation(fields: [periodoAcademicoId], references: [id])
+  actividades      ActividadEvaluacion[]
+  asistencias      AsistenciaRegistro[]
+
+  @@index([centroId])
+  @@index([docenteId])
+  @@index([cursoId])
+  @@map("asignaciones_docentes")
+}
+
+model ActividadEvaluacion {
+  id                  String            @id @default(uuid())
+  centroId            String
+  asignacionDocenteId String
+  nombre              String
+  competencia         Competencia
+  porcentaje          Int
+  periodoEvaluativo   PeriodoEvaluativo
+  fecha               String
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  centro     CentroEducativo      @relation(fields: [centroId], references: [id])
+  asignacion AsignacionDocente    @relation(fields: [asignacionDocenteId], references: [id])
+  registros  RegistroEvaluacion[]
+
+  @@index([centroId])
+  @@index([asignacionDocenteId])
+  @@map("actividades_evaluacion")
+}
+
+model RegistroEvaluacion {
+  id           String   @id @default(uuid())
+  centroId     String
+  actividadId  String
+  estudianteId String
+  nota         Int
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  centro     CentroEducativo     @relation(fields: [centroId], references: [id])
+  actividad  ActividadEvaluacion @relation(fields: [actividadId], references: [id])
+  estudiante Estudiante          @relation(fields: [estudianteId], references: [id])
+
+  @@unique([actividadId, estudianteId])
+  @@index([centroId])
+  @@map("registros_evaluacion")
+}
+
+model AsistenciaRegistro {
+  id                  String           @id @default(uuid())
+  centroId            String
+  estudianteId        String
+  asignacionDocenteId String
+  fecha               String
+  estado              EstadoAsistencia
+  createdAt           DateTime         @default(now())
+
+  centro     CentroEducativo   @relation(fields: [centroId], references: [id])
+  estudiante Estudiante        @relation(fields: [estudianteId], references: [id])
+  asignacion AsignacionDocente @relation(fields: [asignacionDocenteId], references: [id])
+
+  @@index([centroId])
+  @@index([estudianteId])
+  @@index([asignacionDocenteId])
+  @@map("asistencias")
+}
+
+model SeguimientoOrientador {
+  id            String            @id @default(uuid())
+  centroId      String
+  estudianteId  String
+  orientadorId  String
+  fecha         String
+  motivo        String
+  observaciones String            @db.Text
+  acciones      String            @db.Text
+  proximaCita   String?
+  estado        EstadoSeguimiento
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  centro      CentroEducativo @relation(fields: [centroId], references: [id])
+  estudiante  Estudiante      @relation(fields: [estudianteId], references: [id])
+  orientador  Usuario         @relation("OrientadorSeguimientos", fields: [orientadorId], references: [id])
+
+  @@index([centroId])
+  @@index([estudianteId])
+  @@map("seguimientos_orientador")
+}
+
+model Riesgo {
+  id           String      @id @default(uuid())
+  centroId     String
+  estudianteId String      @unique
+  porcentaje   Int
+  nivel        NivelRiesgo
+  fechaCalculo DateTime
+
+  centro     CentroEducativo @relation(fields: [centroId], references: [id])
+  estudiante Estudiante      @relation(fields: [estudianteId], references: [id])
+
+  @@index([centroId])
+  @@map("riesgos")
+}
+
+model HistorialRiesgo {
+  id                 String      @id @default(uuid())
+  centroId           String
+  estudianteId       String
+  porcentajeOriginal Int
+  ajusteAplicado     Int
+  porcentajeFinal    Int
+  nivel              NivelRiesgo
+  usuarioId          String?
+  fecha              DateTime
+
+  centro     CentroEducativo @relation(fields: [centroId], references: [id])
+  estudiante Estudiante      @relation(fields: [estudianteId], references: [id])
+
+  @@index([centroId])
+  @@index([estudianteId])
+  @@map("historial_riesgo")
+}
+
+model ObservacionAula {
+  id           String               @id @default(uuid())
+  centroId     String
+  estudianteId String
+  cursoId      String
+  asignaturaId String?
+  docenteId    String
+  categoria    CategoriaObservacion
+  fecha        String
+  descripcion  String               @db.Text
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+
+  centro     CentroEducativo @relation(fields: [centroId], references: [id])
+  estudiante Estudiante      @relation(fields: [estudianteId], references: [id])
+  curso      Curso           @relation(fields: [cursoId], references: [id])
+  asignatura Asignatura?     @relation(fields: [asignaturaId], references: [id])
+  docente    Usuario         @relation("DocenteObservaciones", fields: [docenteId], references: [id])
+
+  @@index([centroId])
+  @@index([estudianteId])
+  @@map("observaciones_aula")
+}
+
+model RefreshTokenRecord {
+  id        String   @id @default(uuid())
+  usuarioId String
+  token     String   @unique
+  expiresAt DateTime
+  revoked   Boolean  @default(false)
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
+
+  @@index([usuarioId])
+  @@map("refresh_tokens")
 }

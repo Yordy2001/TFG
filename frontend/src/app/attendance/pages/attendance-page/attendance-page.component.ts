@@ -1,5 +1,6 @@
 import { Component, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { catchError, forkJoin, map, of } from 'rxjs';
 import { SubjectsService } from '../../../subjects/subjects.service';
 import { CoursesService } from '../../../courses/courses.service';
 import { StudentsService } from '../../../students/students.service';
@@ -29,10 +30,13 @@ export class AttendancePageComponent {
   readonly students = signal<Estudiante[]>([]);
   readonly fecha = signal<string>(new Date().toISOString().slice(0, 10));
   readonly registrados = signal<Set<string>>(new Set());
+  readonly pendingIds = signal<Set<string>>(new Set());
   readonly marks = signal<Record<string, EstadoAsistencia>>({});
-  readonly savingStudentIds = signal<Set<string>>(new Set());
+  readonly saving = signal(false);
   readonly estados = Object.values(EstadoAsistencia);
   readonly EstadoAsistencia = EstadoAsistencia;
+
+  readonly hasPending = computed(() => this.pendingIds().size > 0);
 
   readonly totalPresentes = computed(
     () => Object.values(this.marks()).filter((e) => e === EstadoAsistencia.PRESENTE).length,
@@ -73,6 +77,7 @@ export class AttendancePageComponent {
   selectAssignment(id: string) {
     this.selectedAssignmentId.set(id);
     this.registrados.set(new Set());
+    this.pendingIds.set(new Set());
     this.marks.set({});
     const assignment = this.assignments().find((a) => a.id === id);
     if (assignment) {
@@ -80,35 +85,52 @@ export class AttendancePageComponent {
     }
   }
 
-  isSaving(estudianteId: string) {
-    return this.savingStudentIds().has(estudianteId);
+  mark(estudianteId: string, estado: EstadoAsistencia) {
+    if (this.saving()) return;
+    this.marks.update((current) => ({ ...current, [estudianteId]: estado }));
+    this.pendingIds.update((set) => new Set(set).add(estudianteId));
   }
 
-  mark(estudianteId: string, estado: EstadoAsistencia) {
-    if (this.isSaving(estudianteId)) return;
-    this.savingStudentIds.update((set) => new Set(set).add(estudianteId));
-    this.attendanceService
-      .register(estudianteId, this.selectedAssignmentId(), this.fecha(), estado)
-      .subscribe({
-        next: () => {
-          this.registrados.update((set) => new Set(set).add(estudianteId));
-          this.marks.update((current) => ({ ...current, [estudianteId]: estado }));
-          this.savingStudentIds.update((set) => {
-            const next = new Set(set);
-            next.delete(estudianteId);
-            return next;
-          });
-          this.notification.success('Asistencia registrada correctamente.');
-        },
-        error: (err) => {
-          this.savingStudentIds.update((set) => {
-            const next = new Set(set);
-            next.delete(estudianteId);
-            return next;
-          });
-          this.notification.error(err?.error?.message ?? 'No se pudo registrar la asistencia.');
-        },
+  saveAttendance() {
+    if (this.saving() || !this.hasPending()) return;
+    const ids = Array.from(this.pendingIds());
+    this.saving.set(true);
+
+    const requests = ids.map((estudianteId) =>
+      this.attendanceService
+        .register(estudianteId, this.selectedAssignmentId(), this.fecha(), this.marks()[estudianteId])
+        .pipe(
+          map(() => ({ estudianteId, ok: true as const })),
+          catchError((err) => of({ estudianteId, ok: false as const, message: err?.error?.message as string | undefined })),
+        ),
+    );
+
+    forkJoin(requests).subscribe((results) => {
+      this.saving.set(false);
+      const succeeded = results.filter((r) => r.ok);
+      const failed = results.filter((r) => !r.ok);
+
+      this.registrados.update((set) => {
+        const next = new Set(set);
+        succeeded.forEach((r) => next.add(r.estudianteId));
+        return next;
       });
+      this.pendingIds.update((set) => {
+        const next = new Set(set);
+        succeeded.forEach((r) => next.delete(r.estudianteId));
+        return next;
+      });
+
+      if (failed.length === 0) {
+        this.notification.success(`Asistencia guardada correctamente (${succeeded.length} estudiante(s)).`);
+      } else if (succeeded.length === 0) {
+        this.notification.error('No se pudo guardar la asistencia. Intente nuevamente.');
+      } else {
+        this.notification.error(
+          `${succeeded.length} registrada(s), ${failed.length} con error. Reintente las pendientes.`,
+        );
+      }
+    });
   }
 
   estadoLabel(estado: EstadoAsistencia) {

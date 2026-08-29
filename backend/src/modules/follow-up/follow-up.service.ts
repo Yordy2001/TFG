@@ -25,8 +25,8 @@ export class FollowUpService {
     });
   }
 
-  update(id: string, centroId: string, dto: UpdateFollowUpDto) {
-    const seguimiento = this.followUpRepository.update(id, centroId, dto);
+  async update(id: string, centroId: string, dto: UpdateFollowUpDto) {
+    const seguimiento = await this.followUpRepository.update(id, centroId, dto);
     if (!seguimiento) throw new NotFoundException('Follow-up record not found');
     return seguimiento;
   }

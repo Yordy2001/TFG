@@ -1,26 +1,28 @@
 import { Injectable } from '@nestjs/common';
-import { MockDataStore } from '../../common/mock-data/mock-data.store';
+import { PrismaService } from '../../common/prisma/prisma.service';
 import { NivelRiesgo, Sexo } from '../../common/enums';
 import { Role } from '../../common/enums/role.enum';
 
 @Injectable()
 export class DashboardService {
-  constructor(private readonly store: MockDataStore) {}
+  constructor(private readonly prisma: PrismaService) {}
 
-  overview(centroId: string, role: Role) {
-    const estudiantes = this.store.estudiantes.filter((e) => e.centroId === centroId && e.activo);
-    const riesgos = this.store.riesgos.filter((r) => r.centroId === centroId);
-    const cursos = this.store.cursos.filter((c) => c.centroId === centroId);
+  async overview(centroId: string, role: Role) {
+    const [estudiantes, riesgos, cursos] = await Promise.all([
+      this.prisma.estudiante.findMany({ where: { centroId, activo: true } }),
+      this.prisma.riesgo.findMany({ where: { centroId } }),
+      this.prisma.curso.findMany({ where: { centroId } }),
+    ]);
 
     const riesgoPorNivel = {
-      [NivelRiesgo.BAJO]: riesgos.filter((r) => r.nivel === NivelRiesgo.BAJO).length,
-      [NivelRiesgo.MEDIO]: riesgos.filter((r) => r.nivel === NivelRiesgo.MEDIO).length,
-      [NivelRiesgo.ALTO]: riesgos.filter((r) => r.nivel === NivelRiesgo.ALTO).length,
+      [NivelRiesgo.BAJO]: riesgos.filter((r) => r.nivel === (NivelRiesgo.BAJO as never)).length,
+      [NivelRiesgo.MEDIO]: riesgos.filter((r) => r.nivel === (NivelRiesgo.MEDIO as never)).length,
+      [NivelRiesgo.ALTO]: riesgos.filter((r) => r.nivel === (NivelRiesgo.ALTO as never)).length,
     };
 
     const distribucionSexo = {
-      [Sexo.M]: estudiantes.filter((e) => e.sexo === Sexo.M).length,
-      [Sexo.F]: estudiantes.filter((e) => e.sexo === Sexo.F).length,
+      [Sexo.M]: estudiantes.filter((e) => e.sexo === (Sexo.M as never)).length,
+      [Sexo.F]: estudiantes.filter((e) => e.sexo === (Sexo.F as never)).length,
     };
 
     const distribucionCurso = cursos.map((curso) => ({
@@ -33,7 +35,7 @@ export class DashboardService {
       .sort((a, b) => b.porcentaje - a.porcentaje)
       .slice(0, 10)
       .map((r) => {
-        const estudiante = this.store.estudiantes.find((e) => e.id === r.estudianteId);
+        const estudiante = estudiantes.find((e) => e.id === r.estudianteId);
         return {
           estudianteId: r.estudianteId,
           nombres: estudiante?.nombres,
@@ -47,19 +49,21 @@ export class DashboardService {
     // El seguimiento del orientador es confidencial: solo se expone al propio orientador.
     const ultimosSeguimientos =
       role === Role.ORIENTADOR
-        ? [...this.store.seguimientos]
-            .filter((s) => s.centroId === centroId)
-            .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-            .slice(0, 5)
-            .map((s) => ({
-              id: s.id,
-              estudianteId: s.estudianteId,
-              fecha: s.fecha,
-              estado: s.estado,
-            }))
+        ? (
+            await this.prisma.seguimientoOrientador.findMany({
+              where: { centroId },
+              orderBy: { createdAt: 'desc' },
+              take: 5,
+            })
+          ).map((s) => ({
+            id: s.id,
+            estudianteId: s.estudianteId,
+            fecha: s.fecha,
+            estado: s.estado,
+          }))
         : [];
 
-    const alertasPendientes = riesgos.filter((r) => r.nivel === NivelRiesgo.ALTO).length;
+    const alertasPendientes = riesgos.filter((r) => r.nivel === (NivelRiesgo.ALTO as never)).length;
 
     return {
       totalEstudiantes: estudiantes.length,

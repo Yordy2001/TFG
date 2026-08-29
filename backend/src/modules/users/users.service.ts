@@ -17,23 +17,24 @@ export class UsersService {
     return safe;
   }
 
-  findAll(centroId: string): SafeUser[] {
-    return this.usersRepository.findAllByCentro(centroId).map((u) => this.toSafe(u));
+  async findAll(centroId: string): Promise<SafeUser[]> {
+    const usuarios = await this.usersRepository.findAllByCentro(centroId);
+    return usuarios.map((u) => this.toSafe(u));
   }
 
-  findById(id: string, centroId: string): SafeUser {
-    const usuario = this.usersRepository.findById(id);
+  async findById(id: string, centroId: string): Promise<SafeUser> {
+    const usuario = await this.usersRepository.findById(id);
     if (!usuario || usuario.centroId !== centroId) {
       throw new NotFoundException('User not found');
     }
     return this.toSafe(usuario);
   }
 
-  create(dto: CreateUserDto, centroId: string): SafeUser {
-    if (this.usersRepository.findByEmail(dto.email)) {
+  async create(dto: CreateUserDto, centroId: string): Promise<SafeUser> {
+    if (await this.usersRepository.findByEmail(dto.email)) {
       throw new BadRequestException('Email already registered');
     }
-    const usuario = this.usersRepository.create({
+    const usuario = await this.usersRepository.create({
       centroId,
       rol: dto.rol,
       nombres: dto.nombres,
@@ -45,16 +46,16 @@ export class UsersService {
     return this.toSafe(usuario);
   }
 
-  update(id: string, centroId: string, dto: UpdateUserDto): SafeUser {
-    const usuario = this.usersRepository.update(id, centroId, dto);
+  async update(id: string, centroId: string, dto: UpdateUserDto): Promise<SafeUser> {
+    const usuario = await this.usersRepository.update(id, centroId, dto);
     if (!usuario) {
       throw new NotFoundException('User not found');
     }
     return this.toSafe(usuario);
   }
 
-  updateOwnProfile(id: string, centroId: string, dto: UpdateOwnProfileDto): SafeUser {
-    const usuario = this.usersRepository.update(id, centroId, dto);
+  async updateOwnProfile(id: string, centroId: string, dto: UpdateOwnProfileDto): Promise<SafeUser> {
+    const usuario = await this.usersRepository.update(id, centroId, dto);
     if (!usuario) {
       throw new NotFoundException('User not found');
     }

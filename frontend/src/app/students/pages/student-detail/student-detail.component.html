@@ -5,8 +5,30 @@
     <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
       <div class="card lg:col-span-1">
         <div class="mb-4 flex flex-col items-center text-center">
-          <div class="mb-3 flex h-20 w-20 items-center justify-center rounded-full bg-[#003366] text-2xl font-semibold text-white">
-            {{ s.nombres[0] }}{{ s.apellidos[0] }}
+          <div class="relative mb-3 h-20 w-20">
+            @if (photoUrl(); as url) {
+              <img
+                [src]="url"
+                [attr.alt]="'Foto de ' + s.nombres + ' ' + s.apellidos"
+                class="h-20 w-20 rounded-full object-cover"
+              />
+            } @else {
+              <div class="flex h-20 w-20 items-center justify-center rounded-full bg-[#003366] text-2xl font-semibold text-white">
+                {{ s.nombres[0] }}{{ s.apellidos[0] }}
+              </div>
+            }
+            @if (canManagePhoto()) {
+              <label
+                [class]="
+                  'absolute -bottom-1 -right-1 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border-2 border-white bg-[#003366] text-white hover:bg-[#0a4d8c]' +
+                  (savingPhoto() ? ' pointer-events-none opacity-60' : '')
+                "
+                title="Cambiar foto"
+              >
+                <mat-icon class="!h-4 !w-4 !text-[16px]">{{ savingPhoto() ? 'hourglass_empty' : 'photo_camera' }}</mat-icon>
+                <input type="file" accept="image/jpeg,image/png" class="hidden" (change)="onPhotoSelected($event)" />
+              </label>
+            }
           </div>
           <h1 class="text-lg font-semibold text-slate-900">{{ s.nombres }} {{ s.apellidos }}</h1>
           <p class="text-xs text-slate-500">ID: {{ s.matricula }}</p>

@@ -25,6 +25,11 @@
         />
       </div>
     </div>
+    @if (selectedAssignment()) {
+      <button type="button" [disabled]="!hasPending() || saving()" (click)="saveAttendance()" class="btn-primary">
+        {{ saving() ? 'Guardando…' : 'Guardar' }}
+      </button>
+    }
   </div>
 
   <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -65,7 +70,7 @@
                   <button
                     type="button"
                     (click)="mark(student.id, estado)"
-                    [disabled]="isSaving(student.id)"
+                    [disabled]="saving()"
                     class="rounded-lg border px-3 py-1 text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-50"
                     [class]="
                       marks()[student.id] === estado
@@ -82,8 +87,14 @@
                 }
               </div>
             </td>
-            <td class="px-4 py-2 text-xs text-slate-500">
-              {{ registrados().has(student.id) ? 'Registrado' : '—' }}
+            <td class="px-4 py-2 text-xs">
+              @if (registrados().has(student.id)) {
+                <span class="text-green-600">Registrado</span>
+              } @else if (pendingIds().has(student.id)) {
+                <span class="text-amber-600">Pendiente</span>
+              } @else {
+                <span class="text-slate-400">—</span>
+              }
             </td>
           </tr>
         } @empty {

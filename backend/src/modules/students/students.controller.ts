@@ -5,6 +5,7 @@ import { memoryStorage } from 'multer';
 import type { Response } from 'express';
 import { StudentsService } from './students.service';
 import { StudentsImportService } from './import/students-import.service';
+import { StudentsPhotoService } from './photo/students-photo.service';
 import { CreateStudentDto, UpdateStudentDto } from './dto/student.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Role } from '../../common/enums/role.enum';
@@ -15,6 +16,11 @@ const importFileInterceptor = FileInterceptor('file', {
   limits: { fileSize: 5 * 1024 * 1024 },
 });
 
+const photoFileInterceptor = FileInterceptor('file', {
+  storage: memoryStorage(),
+  limits: { fileSize: 2 * 1024 * 1024 },
+});
+
 @ApiTags('students')
 @ApiBearerAuth()
 @Controller('students')
@@ -22,6 +28,7 @@ export class StudentsController {
   constructor(
     private readonly studentsService: StudentsService,
     private readonly studentsImportService: StudentsImportService,
+    private readonly studentsPhotoService: StudentsPhotoService,
   ) {}
 
   @Get('import/template')
@@ -77,5 +84,25 @@ export class StudentsController {
   @Roles(Role.ADMINISTRADOR, Role.REGISTRO)
   deactivate(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
     return this.studentsService.deactivate(id, user.centroId);
+  }
+
+  @Post(':id/photo')
+  @Roles(Role.ADMINISTRADOR, Role.REGISTRO)
+  @UseInterceptors(photoFileInterceptor)
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({ schema: { type: 'object', properties: { file: { type: 'string', format: 'binary' } } } })
+  uploadPhoto(
+    @Param('id') id: string,
+    @UploadedFile() file: Express.Multer.File,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.studentsPhotoService.upload(id, user.centroId, file);
+  }
+
+  @Get(':id/photo')
+  async getPhoto(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser, @Res() res: Response) {
+    const { absolutePath, mimetype } = await this.studentsPhotoService.resolveFile(id, user.centroId);
+    res.setHeader('Content-Type', mimetype);
+    res.sendFile(absolutePath);
   }
 }

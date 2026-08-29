@@ -1,49 +1,52 @@
 import { Injectable } from '@nestjs/common';
-import { v4 as uuid } from 'uuid';
-import { MockDataStore } from '../../common/mock-data/mock-data.store';
+import { PrismaService } from '../../common/prisma/prisma.service';
 import { Estudiante } from '../../common/interfaces/entities';
 
 @Injectable()
 export class StudentsRepository {
-  constructor(private readonly store: MockDataStore) {}
+  constructor(private readonly prisma: PrismaService) {}
 
-  findAll(centroId: string, cursoId?: string): Estudiante[] {
-    return this.store.estudiantes.filter(
-      (e) => e.centroId === centroId && (!cursoId || e.cursoId === cursoId),
-    );
+  findAll(centroId: string, cursoId?: string): Promise<Estudiante[]> {
+    return this.prisma.estudiante.findMany({ where: { centroId, ...(cursoId ? { cursoId } : {}) } });
   }
 
-  findById(id: string, centroId: string): Estudiante | undefined {
-    return this.store.estudiantes.find((e) => e.id === id && e.centroId === centroId);
+  findById(id: string, centroId: string): Promise<Estudiante | null> {
+    return this.prisma.estudiante.findFirst({ where: { id, centroId } });
   }
 
-  findByMatricula(matricula: string): Estudiante | undefined {
-    return this.store.estudiantes.find((e) => e.matricula === matricula);
+  findByMatricula(matricula: string): Promise<Estudiante | null> {
+    return this.prisma.estudiante.findUnique({ where: { matricula } });
   }
 
-  create(data: Omit<Estudiante, 'id' | 'createdAt' | 'updatedAt'>): Estudiante {
-    const now = new Date();
-    const estudiante: Estudiante = { ...data, id: uuid(), createdAt: now, updatedAt: now };
-    this.store.estudiantes.push(estudiante);
-    return estudiante;
+  async findExistingMatriculas(matriculas: string[]): Promise<Set<string>> {
+    if (matriculas.length === 0) return new Set();
+    const found = await this.prisma.estudiante.findMany({
+      where: { matricula: { in: matriculas } },
+      select: { matricula: true },
+    });
+    return new Set(found.map((f) => f.matricula));
   }
 
-  update(id: string, centroId: string, data: Partial<Estudiante>): Estudiante | undefined {
-    const estudiante = this.findById(id, centroId);
-    if (!estudiante) return undefined;
-    Object.assign(estudiante, data, { updatedAt: new Date() });
-    return estudiante;
+  create(data: Omit<Estudiante, 'id' | 'createdAt' | 'updatedAt'>): Promise<Estudiante> {
+    return this.prisma.estudiante.create({ data: data as never });
   }
 
-  hasHistory(estudianteId: string): boolean {
-    return (
-      this.store.registrosEvaluacion.some((r) => r.estudianteId === estudianteId) ||
-      this.store.asistencias.some((a) => a.estudianteId === estudianteId) ||
-      this.store.seguimientos.some((s) => s.estudianteId === estudianteId)
-    );
+  async update(id: string, centroId: string, data: Partial<Estudiante>): Promise<Estudiante | undefined> {
+    const result = await this.prisma.estudiante.updateMany({ where: { id, centroId }, data: data as never });
+    if (result.count === 0) return undefined;
+    return (await this.findById(id, centroId)) ?? undefined;
   }
 
-  deactivate(id: string, centroId: string): Estudiante | undefined {
+  async hasHistory(estudianteId: string): Promise<boolean> {
+    const [evaluaciones, asistencias, seguimientos] = await Promise.all([
+      this.prisma.registroEvaluacion.count({ where: { estudianteId } }),
+      this.prisma.asistenciaRegistro.count({ where: { estudianteId } }),
+      this.prisma.seguimientoOrientador.count({ where: { estudianteId } }),
+    ]);
+    return evaluaciones > 0 || asistencias > 0 || seguimientos > 0;
+  }
+
+  deactivate(id: string, centroId: string): Promise<Estudiante | undefined> {
     return this.update(id, centroId, { activo: false });
   }
 }

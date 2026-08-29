@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
-import { MockDataModule } from './common/mock-data/mock-data.store';
 import { PrismaModule } from './common/prisma/prisma.module';
 import { EnginesModule } from './common/engines/engines.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
@@ -24,7 +23,6 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
-    MockDataModule,
     EnginesModule,
     AuthModule,
     UsersModule,
