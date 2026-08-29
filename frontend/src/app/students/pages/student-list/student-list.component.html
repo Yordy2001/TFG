@@ -2,12 +2,15 @@
   <div class="mb-6 flex items-center justify-between">
     <h1 class="text-xl font-semibold text-slate-900">Estudiantes</h1>
     @if (canManage()) {
-      <a
-        routerLink="/students/new"
-        class="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500"
-      >
-        + Nuevo estudiante
-      </a>
+      <div class="flex items-center gap-2">
+        <button type="button" (click)="openImportDialog()" class="btn-secondary">Importar desde Excel</button>
+        <a
+          routerLink="/students/new"
+          class="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500"
+        >
+          + Nuevo estudiante
+        </a>
+      </div>
     }
   </div>
 

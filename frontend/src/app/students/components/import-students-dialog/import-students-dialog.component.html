@@ -1,0 +1,103 @@
+<h2 mat-dialog-title class="text-base font-semibold text-slate-900">Importar estudiantes desde Excel</h2>
+
+<mat-dialog-content>
+  <div class="w-[640px] max-w-full space-y-4 text-sm">
+    <div class="flex items-center justify-between gap-3 rounded-lg bg-slate-50 p-3">
+      <p class="text-slate-600">Descargue la plantilla para conocer las columnas requeridas y el formato esperado.</p>
+      <button type="button" class="btn-secondary shrink-0" (click)="downloadTemplate()" [disabled]="downloadingTemplate()">
+        {{ downloadingTemplate() ? 'Descargando…' : 'Descargar plantilla' }}
+      </button>
+    </div>
+
+    <div>
+      <label class="mb-1 block text-xs font-medium text-slate-700">Archivo (.xlsx)</label>
+      <input
+        type="file"
+        accept=".xlsx"
+        (change)="onFileSelected($event)"
+        class="block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+      />
+    </div>
+
+    @if (file() && !preview()) {
+      <button type="button" class="btn-primary" (click)="runPreview()" [disabled]="loadingPreview()">
+        {{ loadingPreview() ? 'Analizando…' : 'Ver vista previa' }}
+      </button>
+    }
+
+    @if (preview(); as p) {
+      <div class="overflow-hidden rounded-lg border border-slate-200">
+        <div class="flex flex-wrap gap-4 border-b border-slate-200 bg-slate-50 p-3 text-xs">
+          <span class="font-medium text-slate-700">Total: {{ p.totalFilas }}</span>
+          <span class="text-green-700">Válidas: {{ p.validas }}</span>
+          <span class="text-amber-700">Con advertencias: {{ p.conAdvertencias }}</span>
+          <span class="text-[#d92d20]">Con errores: {{ p.invalidas }}</span>
+        </div>
+        <div class="max-h-64 overflow-y-auto">
+          <table class="min-w-full text-xs">
+            <thead class="bg-slate-50 text-left text-slate-500">
+              <tr>
+                <th class="px-2 py-1 font-medium">Fila</th>
+                <th class="px-2 py-1 font-medium">Matrícula</th>
+                <th class="px-2 py-1 font-medium">Nombre</th>
+                <th class="px-2 py-1 font-medium">Estado</th>
+                <th class="px-2 py-1 font-medium">Detalle</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              @for (fila of p.filas; track fila.fila) {
+                <tr>
+                  <td class="px-2 py-1 text-slate-500">{{ fila.fila }}</td>
+                  <td class="px-2 py-1">{{ fila.matricula || '—' }}</td>
+                  <td class="px-2 py-1">{{ fila.nombres }} {{ fila.apellidos }}</td>
+                  <td class="px-2 py-1">
+                    <span class="rounded-full px-2 py-0.5 text-[11px] font-medium" [class]="rowBadgeClass(fila.estado)">
+                      {{ rowStatusLabel(fila.estado) }}
+                    </span>
+                  </td>
+                  <td class="px-2 py-1 text-slate-500">
+                    @for (e of fila.errores; track e) {
+                      <div class="text-[#d92d20]">{{ e }}</div>
+                    }
+                    @for (a of fila.advertencias; track a) {
+                      <div class="text-amber-600">{{ a }}</div>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+
+    @if (result(); as r) {
+      <div class="rounded-lg bg-slate-50 p-3">
+        <p class="font-medium text-slate-700">
+          Importación completada: {{ r.importados }} de {{ r.total }} estudiantes importados.
+        </p>
+        @if (r.rechazados > 0) {
+          <p class="text-xs text-slate-500">{{ r.rechazados }} fila(s) se rechazaron. Revise el detalle de la vista previa.</p>
+        }
+      </div>
+    }
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button type="button" class="rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100" (click)="close()">
+    Cerrar
+  </button>
+  @if (preview(); as p) {
+    @if (!result()) {
+      <button
+        type="button"
+        class="btn-primary"
+        [disabled]="confirming() || p.validas + p.conAdvertencias === 0"
+        (click)="confirmImport()"
+      >
+        {{ confirming() ? 'Importando…' : 'Confirmar importación (' + (p.validas + p.conAdvertencias) + ')' }}
+      </button>
+    }
+  }
+</mat-dialog-actions>

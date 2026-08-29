@@ -7,6 +7,37 @@ import { API_BASE_URL } from '../core/config/api.config';
 
 export type CreateStudentPayload = Omit<Estudiante, 'id' | 'centroId' | 'activo' | 'incidentesDisciplinarios'>;
 
+export type ImportRowStatus = 'valida' | 'advertencia' | 'error';
+
+export interface ImportRowResult {
+  fila: number;
+  matricula: string;
+  nombres: string;
+  apellidos: string;
+  sexo: string;
+  fechaNacimiento: string;
+  cursoNombre: string;
+  cursoId: string | null;
+  estado: ImportRowStatus;
+  errores: string[];
+  advertencias: string[];
+}
+
+export interface ImportPreviewResult {
+  totalFilas: number;
+  validas: number;
+  conAdvertencias: number;
+  invalidas: number;
+  filas: ImportRowResult[];
+}
+
+export interface ImportConfirmResult {
+  total: number;
+  importados: number;
+  rechazados: number;
+  detalle: ImportRowResult[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class StudentsService {
   constructor(private readonly http: HttpClient) {}
@@ -34,5 +65,25 @@ export class StudentsService {
 
   deactivate(id: string) {
     return this.http.delete<ApiResponse<Estudiante>>(`${API_BASE_URL}/students/${id}`).pipe(map((res) => res.data));
+  }
+
+  downloadImportTemplate() {
+    return this.http.get(`${API_BASE_URL}/students/import/template`, { responseType: 'blob' });
+  }
+
+  previewImport(file: File) {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http
+      .post<ApiResponse<ImportPreviewResult>>(`${API_BASE_URL}/students/import/preview`, formData)
+      .pipe(map((res) => res.data));
+  }
+
+  confirmImport(file: File) {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http
+      .post<ApiResponse<ImportConfirmResult>>(`${API_BASE_URL}/students/import/confirm`, formData)
+      .pipe(map((res) => res.data));
   }
 }

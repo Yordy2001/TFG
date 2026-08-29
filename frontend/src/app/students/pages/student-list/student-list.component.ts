@@ -1,6 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { MatDialog } from '@angular/material/dialog';
 import { StudentsService } from '../../students.service';
 import { CoursesService } from '../../../courses/courses.service';
 import { Curso, Estudiante } from '../../../core/models/domain.model';
@@ -8,6 +9,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { Role } from '../../../core/models/auth.model';
 import { NotificationService } from '../../../core/services/notification.service';
 import { ConfirmDialogService } from '../../../shared/components/confirm-dialog/confirm-dialog.service';
+import { ImportStudentsDialogComponent } from '../../components/import-students-dialog/import-students-dialog.component';
 
 @Component({
   selector: 'app-student-list',
@@ -18,6 +20,7 @@ import { ConfirmDialogService } from '../../../shared/components/confirm-dialog/
 export class StudentListComponent {
   private readonly notification = inject(NotificationService);
   private readonly confirmDialog = inject(ConfirmDialogService);
+  private readonly dialog = inject(MatDialog);
 
   readonly loading = signal(true);
   readonly students = signal<Estudiante[]>([]);
@@ -54,6 +57,15 @@ export class StudentListComponent {
       this.students.set(students);
       this.loading.set(false);
     });
+  }
+
+  openImportDialog() {
+    this.dialog
+      .open(ImportStudentsDialogComponent, { width: '720px', maxWidth: '95vw' })
+      .afterClosed()
+      .subscribe((importedAny) => {
+        if (importedAny) this.reload();
+      });
   }
 
   isDeactivating(id: string) {
