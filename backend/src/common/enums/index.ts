@@ -35,3 +35,10 @@ export enum Sexo {
   M = 'M',
   F = 'F',
 }
+
+export enum CategoriaObservacion {
+  INCIDENTE = 'INCIDENTE',
+  ACTITUD_POSITIVA = 'ACTITUD_POSITIVA',
+  CONVIVENCIA = 'CONVIVENCIA',
+  OBSERVACION_ACADEMICA = 'OBSERVACION_ACADEMICA',
+}

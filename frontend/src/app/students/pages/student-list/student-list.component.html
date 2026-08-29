@@ -36,6 +36,9 @@
             <th class="px-4 py-2 text-left font-medium text-slate-500">Curso</th>
             <th class="px-4 py-2 text-left font-medium text-slate-500">Sexo</th>
             <th class="px-4 py-2 text-left font-medium text-slate-500">Estado</th>
+            @if (canManage()) {
+              <th class="px-4 py-2 text-left font-medium text-slate-500">Acciones</th>
+            }
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-100">
@@ -57,10 +60,26 @@
                   {{ student.activo ? 'Activo' : 'Inactivo' }}
                 </span>
               </td>
+              @if (canManage()) {
+                <td class="px-4 py-2">
+                  @if (student.activo) {
+                    <button
+                      type="button"
+                      [disabled]="isDeactivating(student.id)"
+                      (click)="deactivate(student)"
+                      class="rounded-lg border border-slate-300 px-2 py-1 text-xs font-medium text-slate-600 hover:border-[#d92d20] hover:text-[#d92d20] disabled:opacity-50"
+                    >
+                      {{ isDeactivating(student.id) ? 'Desactivando…' : 'Desactivar' }}
+                    </button>
+                  }
+                </td>
+              }
             </tr>
           } @empty {
             <tr>
-              <td colspan="5" class="px-4 py-6 text-center text-slate-400">No hay estudiantes registrados.</td>
+              <td [attr.colspan]="canManage() ? 6 : 5" class="px-4 py-6 text-center text-slate-400">
+                No hay estudiantes registrados.
+              </td>
             </tr>
           }
         </tbody>

@@ -139,6 +139,101 @@
         </ul>
       </div>
 
+      @if (isDocente() && canRecordObservation()) {
+        <div class="card lg:col-span-3">
+          <h2 class="mb-1 text-sm font-semibold text-slate-700">Observaciones de aula</h2>
+          <p class="mb-3 text-xs text-slate-400">
+            Incidentes, actitudes o notas de convivencia registradas por los docentes del estudiante. No es un
+            registro confidencial y es distinto de la bitácora del orientador.
+          </p>
+
+          <form (ngSubmit)="createObservation()" class="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-4 sm:items-end">
+            <div>
+              <label class="mb-1 block text-xs font-medium text-slate-700">Categoría</label>
+              <select
+                [ngModel]="observationCategoria()"
+                (ngModelChange)="observationCategoria.set($event)"
+                name="categoria"
+                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              >
+                @for (c of categorias; track c) {
+                  <option [value]="c">{{ categoriaLabel(c) }}</option>
+                }
+              </select>
+            </div>
+            <div>
+              <label class="mb-1 block text-xs font-medium text-slate-700">Fecha</label>
+              <input
+                type="date"
+                [ngModel]="observationFecha()"
+                (ngModelChange)="observationFecha.set($event)"
+                name="fecha"
+                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              />
+            </div>
+            <div>
+              <label class="mb-1 block text-xs font-medium text-slate-700">Asignatura (opcional)</label>
+              <select
+                [ngModel]="observationAsignaturaId()"
+                (ngModelChange)="observationAsignaturaId.set($event)"
+                name="asignaturaId"
+                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              >
+                <option value="">Sin especificar</option>
+                @for (a of docenteAsignaturas(); track a.id) {
+                  <option [value]="a.id">{{ a.nombre }}</option>
+                }
+              </select>
+            </div>
+            <div class="sm:col-span-4">
+              <label class="mb-1 block text-xs font-medium text-slate-700">Descripción</label>
+              <textarea
+                [ngModel]="observationDescripcion()"
+                (ngModelChange)="observationDescripcion.set($event)"
+                name="descripcion"
+                rows="2"
+                placeholder="Describa el incidente, la actitud o la observación..."
+                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              ></textarea>
+            </div>
+            <div class="sm:col-span-4">
+              <button
+                type="submit"
+                [disabled]="savingObservation() || !observationDescripcion().trim()"
+                class="btn-primary"
+              >
+                {{ savingObservation() ? 'Guardando…' : 'Registrar observación' }}
+              </button>
+            </div>
+          </form>
+
+          <ul class="divide-y divide-slate-100 text-sm">
+            @for (obs of observaciones(); track obs.id) {
+              <li class="flex items-start justify-between gap-3 py-2">
+                <div>
+                  <p class="font-medium text-slate-700">
+                    {{ obs.fecha }} — {{ categoriaLabel(obs.categoria) }}
+                  </p>
+                  <p class="text-slate-600">{{ obs.descripcion }}</p>
+                </div>
+                @if (isOwnObservation(obs)) {
+                  <button
+                    type="button"
+                    [disabled]="isDeletingObservation(obs.id)"
+                    (click)="deleteObservation(obs)"
+                    class="shrink-0 rounded-lg border border-slate-300 px-2 py-1 text-xs font-medium text-slate-600 hover:border-[#d92d20] hover:text-[#d92d20] disabled:opacity-50"
+                  >
+                    {{ isDeletingObservation(obs.id) ? 'Eliminando…' : 'Eliminar' }}
+                  </button>
+                }
+              </li>
+            } @empty {
+              <li class="py-4 text-center text-slate-400">Sin observaciones de aula registradas.</li>
+            }
+          </ul>
+        </div>
+      }
+
       @if (isOrientador()) {
         <div id="ajuste-riesgo" class="card lg:col-span-3">
           <h2 class="mb-3 text-sm font-semibold text-slate-700">Ajuste profesional del riesgo</h2>
@@ -150,7 +245,9 @@
               class="w-32 rounded-lg border border-slate-300 px-3 py-2 text-sm"
               placeholder="+/- %"
             />
-            <button type="button" (click)="applyAdjustment()" class="btn-primary">Aplicar ajuste</button>
+            <button type="button" (click)="applyAdjustment()" [disabled]="savingAjuste()" class="btn-primary">
+              {{ savingAjuste() ? 'Aplicando…' : 'Aplicar ajuste' }}
+            </button>
             @if (ajusteMessage()) {
               <span class="text-sm text-slate-500">{{ ajusteMessage() }}</span>
             }

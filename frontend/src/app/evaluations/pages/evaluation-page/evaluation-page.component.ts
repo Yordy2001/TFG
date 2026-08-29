@@ -1,18 +1,20 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
+import { MatIconModule } from '@angular/material/icon';
 import { SubjectsService } from '../../../subjects/subjects.service';
 import { CoursesService } from '../../../courses/courses.service';
 import { StudentsService } from '../../../students/students.service';
 import { EvaluationsService } from '../../evaluations.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { NotificationService } from '../../../core/services/notification.service';
 import { TopBarComponent } from '../../../shared/components/top-bar/top-bar.component';
 import { AsignacionDocente, Asignatura, Competencia, Curso, Estudiante, PeriodoEvaluativo, ActividadEvaluacion } from '../../../core/models/domain.model';
 
 @Component({
   selector: 'app-evaluation-page',
   standalone: true,
-  imports: [ReactiveFormsModule, FormsModule, TopBarComponent],
+  imports: [ReactiveFormsModule, FormsModule, MatIconModule, TopBarComponent],
   templateUrl: './evaluation-page.component.html',
 })
 export class EvaluationPageComponent {
@@ -21,6 +23,7 @@ export class EvaluationPageComponent {
   private readonly studentsService = inject(StudentsService);
   private readonly evaluationsService = inject(EvaluationsService);
   private readonly authService = inject(AuthService);
+  private readonly notification = inject(NotificationService);
   private readonly fb = inject(FormBuilder);
 
   readonly assignments = signal<AsignacionDocente[]>([]);
@@ -30,7 +33,8 @@ export class EvaluationPageComponent {
   readonly activities = signal<ActividadEvaluacion[]>([]);
   readonly students = signal<Estudiante[]>([]);
   readonly grades = signal<Record<string, Record<string, number>>>({});
-  readonly message = signal<string | null>(null);
+  readonly savingGrades = signal<Record<string, boolean>>({});
+  readonly savingActivity = signal(false);
 
   readonly competencias = Object.values(Competencia);
   readonly periodos = Object.values(PeriodoEvaluativo);
@@ -80,16 +84,21 @@ export class EvaluationPageComponent {
   }
 
   createActivity() {
-    if (this.form.invalid) return;
-    this.message.set(null);
+    if (this.form.invalid || this.savingActivity()) return;
+    this.savingActivity.set(true);
     this.evaluationsService
       .createActivity({ ...this.form.getRawValue(), asignacionDocenteId: this.selectedAssignmentId() } as any)
       .subscribe({
         next: () => {
+          this.savingActivity.set(false);
+          this.notification.success('Actividad de evaluación creada correctamente.');
           this.form.reset({ competencia: Competencia.C1_COMUNICATIVA, porcentaje: 10, periodoEvaluativo: PeriodoEvaluativo.P1 });
           this.loadActivities();
         },
-        error: (err) => this.message.set(err?.error?.message ?? 'No se pudo crear la actividad.'),
+        error: (err) => {
+          this.savingActivity.set(false);
+          this.notification.error(err?.error?.message ?? 'No se pudo crear la actividad.');
+        },
       });
   }
 
@@ -104,10 +113,29 @@ export class EvaluationPageComponent {
     }));
   }
 
+  private gradeKey(actividadId: string, estudianteId: string) {
+    return `${actividadId}:${estudianteId}`;
+  }
+
+  isSavingGrade(actividadId: string, estudianteId: string) {
+    return !!this.savingGrades()[this.gradeKey(actividadId, estudianteId)];
+  }
+
   saveGrade(actividadId: string, estudianteId: string) {
     const nota = this.gradeFor(actividadId, estudianteId);
-    if (nota == null) return;
-    this.evaluationsService.registerGrade(actividadId, estudianteId, nota).subscribe();
+    if (nota == null || nota < 0 || nota > 100 || this.isSavingGrade(actividadId, estudianteId)) return;
+    const key = this.gradeKey(actividadId, estudianteId);
+    this.savingGrades.update((current) => ({ ...current, [key]: true }));
+    this.evaluationsService.registerGrade(actividadId, estudianteId, nota).subscribe({
+      next: () => {
+        this.savingGrades.update((current) => ({ ...current, [key]: false }));
+        this.notification.success('Calificación guardada correctamente.');
+      },
+      error: (err) => {
+        this.savingGrades.update((current) => ({ ...current, [key]: false }));
+        this.notification.error(err?.error?.message ?? 'No se pudo guardar la calificación.');
+      },
+    });
   }
 
   gradeCellClass(actividadId: string, estudianteId: string) {

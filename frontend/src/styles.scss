@@ -38,6 +38,18 @@ body {
 .btn-secondary {
   @apply inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50;
 }
+
+.snackbar-success {
+  --mdc-snackbar-container-color: #1f8a4c;
+  --mdc-snackbar-supporting-text-color: #ffffff;
+  --mat-snack-bar-button-color: #ffffff;
+}
+.snackbar-error {
+  --mdc-snackbar-container-color: #d92d20;
+  --mdc-snackbar-supporting-text-color: #ffffff;
+  --mat-snack-bar-button-color: #ffffff;
+}
+
 .btn-danger {
   @apply inline-flex items-center justify-center gap-2 rounded-lg bg-[#d92d20] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#b8241a];
 }

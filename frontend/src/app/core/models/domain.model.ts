@@ -34,6 +34,13 @@ export enum PeriodoEvaluativo {
   P4 = 'P4',
 }
 
+export enum CategoriaObservacion {
+  INCIDENTE = 'INCIDENTE',
+  ACTITUD_POSITIVA = 'ACTITUD_POSITIVA',
+  CONVIVENCIA = 'CONVIVENCIA',
+  OBSERVACION_ACADEMICA = 'OBSERVACION_ACADEMICA',
+}
+
 export interface Curso {
   id: string;
   centroId: string;
@@ -109,6 +116,18 @@ export interface SeguimientoOrientador {
   acciones: string;
   proximaCita: string | null;
   estado: EstadoSeguimiento;
+}
+
+export interface ObservacionAula {
+  id: string;
+  estudianteId: string;
+  cursoId: string;
+  asignaturaId: string | null;
+  docenteId: string;
+  categoria: CategoriaObservacion;
+  fecha: string;
+  descripcion: string;
+  createdAt: string;
 }
 
 export interface DashboardOverview {

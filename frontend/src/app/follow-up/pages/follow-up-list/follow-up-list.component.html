@@ -64,7 +64,9 @@
           <p class="text-sm text-[#d92d20]">{{ message() }}</p>
         }
         <div class="flex justify-end gap-2 pt-2">
-          <button type="submit" class="btn-primary">Enviar Bitácora</button>
+          <button type="submit" [disabled]="saving()" class="btn-primary">
+            {{ saving() ? 'Enviando…' : 'Enviar Bitácora' }}
+          </button>
         </div>
       </form>
     </div>

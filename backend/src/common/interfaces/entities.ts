@@ -1,5 +1,6 @@
 import { Role } from '../enums/role.enum';
 import {
+  CategoriaObservacion,
   Competencia,
   EstadoAsistencia,
   EstadoSeguimiento,
@@ -151,6 +152,20 @@ export interface HistorialRiesgo {
   nivel: NivelRiesgo;
   usuarioId: string | null;
   fecha: Date;
+}
+
+export interface ObservacionAula {
+  id: string;
+  centroId: string;
+  estudianteId: string;
+  cursoId: string;
+  asignaturaId: string | null;
+  docenteId: string;
+  categoria: CategoriaObservacion;
+  fecha: string;
+  descripcion: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface RefreshTokenRecord {

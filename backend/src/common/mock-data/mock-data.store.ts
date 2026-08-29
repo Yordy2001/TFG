@@ -19,6 +19,7 @@ import {
   Curso,
   Estudiante,
   HistorialRiesgo,
+  ObservacionAula,
   PeriodoAcademico,
   RefreshTokenRecord,
   RegistroEvaluacion,
@@ -45,6 +46,7 @@ export class MockDataStore {
   readonly registrosEvaluacion: RegistroEvaluacion[] = [];
   readonly asistencias: AsistenciaRegistro[] = [];
   readonly seguimientos: SeguimientoOrientador[] = [];
+  readonly observacionesAula: ObservacionAula[] = [];
   readonly riesgos: Riesgo[] = [];
   readonly historialRiesgo: HistorialRiesgo[] = [];
   readonly refreshTokens: RefreshTokenRecord[] = [];

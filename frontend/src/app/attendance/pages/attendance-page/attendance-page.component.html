@@ -65,7 +65,8 @@
                   <button
                     type="button"
                     (click)="mark(student.id, estado)"
-                    class="rounded-lg border px-3 py-1 text-xs font-medium transition"
+                    [disabled]="isSaving(student.id)"
+                    class="rounded-lg border px-3 py-1 text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-50"
                     [class]="
                       marks()[student.id] === estado
                         ? (estado === EstadoAsistencia.PRESENTE

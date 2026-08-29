@@ -16,6 +16,7 @@ import { SubjectsModule } from './modules/subjects/subjects.module';
 import { EvaluationsModule } from './modules/evaluations/evaluations.module';
 import { AttendanceModule } from './modules/attendance/attendance.module';
 import { FollowUpModule } from './modules/follow-up/follow-up.module';
+import { ClassroomObservationsModule } from './modules/classroom-observations/classroom-observations.module';
 import { RiskModule } from './modules/risk/risk.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 
@@ -35,6 +36,7 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
     EvaluationsModule,
     AttendanceModule,
     FollowUpModule,
+    ClassroomObservationsModule,
     RiskModule,
     DashboardModule,
   ],

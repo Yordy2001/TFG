@@ -9,6 +9,7 @@ import { ApiResponse } from '../../../core/models/api-response.model';
 import { Estudiante, SeguimientoOrientador } from '../../../core/models/domain.model';
 import { API_BASE_URL } from '../../../core/config/api.config';
 import { TopBarComponent } from '../../../shared/components/top-bar/top-bar.component';
+import { NotificationService } from '../../../core/services/notification.service';
 
 type Categoria = 'Académico' | 'Familiar/Hogar' | 'Emocional/Social';
 
@@ -23,10 +24,12 @@ export class FollowUpListComponent {
   private readonly studentsService = inject(StudentsService);
   private readonly http = inject(HttpClient);
   private readonly fb = inject(FormBuilder);
+  private readonly notification = inject(NotificationService);
 
   readonly recent = signal<SeguimientoOrientador[]>([]);
   readonly students = signal<Estudiante[]>([]);
   readonly message = signal<string | null>(null);
+  readonly saving = signal(false);
   readonly categoria = signal<Categoria>('Académico');
   readonly categorias: Categoria[] = ['Académico', 'Familiar/Hogar', 'Emocional/Social'];
 
@@ -57,17 +60,29 @@ export class FollowUpListComponent {
   }
 
   submit() {
-    if (this.form.invalid) return;
+    if (this.form.invalid || this.saving()) {
+      this.form.markAllAsTouched();
+      return;
+    }
+    this.message.set(null);
+    this.saving.set(true);
     const value = this.form.getRawValue();
     this.followUpService
       .create({ ...value, proximaCita: value.proximaCita || undefined } as any)
       .subscribe({
         next: () => {
+          this.saving.set(false);
+          this.notification.success('Bitácora registrada correctamente.');
           this.form.reset();
           this.categoria.set('Académico');
           this.loadRecent();
         },
-        error: () => this.message.set('No se pudo registrar el seguimiento.'),
+        error: (err) => {
+          this.saving.set(false);
+          const message = err?.error?.message ?? 'No se pudo registrar el seguimiento.';
+          this.message.set(message);
+          this.notification.error(message);
+        },
       });
   }
 }
