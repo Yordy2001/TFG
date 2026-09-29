@@ -15,19 +15,31 @@ export class FollowUpService {
     return this.followUpRepository.findRecent(centroId, limit);
   }
 
-  create(dto: CreateFollowUpDto, centroId: string, orientadorId: string) {
-    return this.followUpRepository.create({
+  async create(dto: CreateFollowUpDto, centroId: string, orientadorId: string) {
+    const seguimiento = await this.followUpRepository.create({
       ...dto,
       centroId,
       orientadorId,
       proximaCita: dto.proximaCita ?? null,
       estado: EstadoSeguimiento.ABIERTO,
+      situacionEconomicaFamiliar: dto.situacionEconomicaFamiliar ?? null,
+      apoyoFamiliarPercibido: dto.apoyoFamiliarPercibido ?? null,
+      trabajaDurantePeriodoEscolar: dto.trabajaDurantePeriodoEscolar ?? null,
+      distanciaHogarEscuelaKm: dto.distanciaHogarEscuelaKm ?? null,
+      problemasFamiliaresReportados: dto.problemasFamiliaresReportados ?? null,
+      senalesPreviasAbandono: dto.senalesPreviasAbandono ?? null,
+      factorAjusteOrientador: dto.factorAjusteOrientador ?? null,
     });
+    await this.followUpRepository.appendEstadoHistorial(seguimiento.id, centroId, EstadoSeguimiento.ABIERTO, orientadorId);
+    return seguimiento;
   }
 
-  async update(id: string, centroId: string, dto: UpdateFollowUpDto) {
+  async update(id: string, centroId: string, dto: UpdateFollowUpDto, usuarioId: string) {
     const seguimiento = await this.followUpRepository.update(id, centroId, dto);
     if (!seguimiento) throw new NotFoundException('Follow-up record not found');
+    if (dto.estado) {
+      await this.followUpRepository.appendEstadoHistorial(seguimiento.id, centroId, dto.estado, usuarioId);
+    }
     return seguimiento;
   }
 }

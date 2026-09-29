@@ -40,6 +40,13 @@ export class FollowUpListComponent {
     observaciones: ['', Validators.required],
     acciones: ['', Validators.required],
     proximaCita: [''],
+    situacionEconomicaFamiliar: [null as number | null, [Validators.min(1), Validators.max(5)]],
+    apoyoFamiliarPercibido: [null as number | null, [Validators.min(1), Validators.max(5)]],
+    trabajaDurantePeriodoEscolar: [false],
+    distanciaHogarEscuelaKm: [null as number | null, [Validators.min(0)]],
+    problemasFamiliaresReportados: [false],
+    senalesPreviasAbandono: [false],
+    factorAjusteOrientador: [null as number | null],
   });
 
   constructor() {
@@ -60,15 +67,26 @@ export class FollowUpListComponent {
   }
 
   submit() {
-    if (this.form.invalid || this.saving()) {
+    if (this.saving()) return;
+    if (this.form.invalid) {
       this.form.markAllAsTouched();
+      const message = 'Complete los campos obligatorios (estudiante, fecha, motivo, observaciones y acciones).';
+      this.message.set(message);
+      this.notification.error(message);
       return;
     }
     this.message.set(null);
     this.saving.set(true);
     const value = this.form.getRawValue();
     this.followUpService
-      .create({ ...value, proximaCita: value.proximaCita || undefined } as any)
+      .create({
+        ...value,
+        proximaCita: value.proximaCita || undefined,
+        situacionEconomicaFamiliar: value.situacionEconomicaFamiliar ?? undefined,
+        apoyoFamiliarPercibido: value.apoyoFamiliarPercibido ?? undefined,
+        distanciaHogarEscuelaKm: value.distanciaHogarEscuelaKm ?? undefined,
+        factorAjusteOrientador: value.factorAjusteOrientador ?? undefined,
+      } as any)
       .subscribe({
         next: () => {
           this.saving.set(false);

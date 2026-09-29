@@ -10,4 +10,6 @@ export {
   PeriodoEvaluativo,
   Sexo,
   CategoriaObservacion,
+  EstadoFinalPeriodo,
+  FuenteConfirmacion,
 } from '@prisma/client';

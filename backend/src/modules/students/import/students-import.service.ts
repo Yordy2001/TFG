@@ -69,7 +69,6 @@ export class StudentsImportService {
         fechaNacimiento: row.fechaNacimiento,
         activo: true,
         incidentesDisciplinarios: 0,
-        fotoArchivo: null,
       });
       importados += 1;
     }

@@ -13,6 +13,7 @@ export class EvaluationsController {
   constructor(private readonly evaluationsService: EvaluationsService) {}
 
   @Get('activities')
+  @Roles(Role.ADMINISTRADOR, Role.REGISTRO, Role.DIRECTOR, Role.DOCENTE, Role.ORIENTADOR)
   activities(@Query('asignacionDocenteId') asignacionDocenteId: string) {
     return this.evaluationsService.activitiesByAssignment(asignacionDocenteId);
   }
@@ -30,6 +31,7 @@ export class EvaluationsController {
   }
 
   @Get('students/:estudianteId/results')
+  @Roles(Role.ADMINISTRADOR, Role.REGISTRO, Role.DIRECTOR, Role.DOCENTE, Role.ORIENTADOR)
   resultados(@Param('estudianteId') estudianteId: string, @Query('cursoId') cursoId: string) {
     return this.evaluationsService.resultadosEstudiante(estudianteId, cursoId);
   }

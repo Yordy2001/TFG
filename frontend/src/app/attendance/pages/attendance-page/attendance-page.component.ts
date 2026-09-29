@@ -14,6 +14,7 @@ const ESTADO_LABELS: Record<EstadoAsistencia, string> = {
   [EstadoAsistencia.PRESENTE]: 'Presente',
   [EstadoAsistencia.TARDANZA]: 'Atraso',
   [EstadoAsistencia.AUSENTE]: 'Ausente',
+  [EstadoAsistencia.AUSENCIA_JUSTIFICADA]: 'Ausencia justificada',
 };
 
 @Component({

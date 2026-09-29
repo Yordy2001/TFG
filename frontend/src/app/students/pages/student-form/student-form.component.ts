@@ -6,8 +6,6 @@ import { CoursesService } from '../../../courses/courses.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { Curso, Sexo } from '../../../core/models/domain.model';
 
-const ALLOWED_PHOTO_TYPES = ['image/jpeg', 'image/png'];
-const MAX_PHOTO_SIZE_BYTES = 2 * 1024 * 1024;
 const MAX_MATRICULA_RETRIES = 5;
 
 /** First letter of nombre + first letter of each of the first two apellido tokens + AAMMDD (fecha de registro). */
@@ -50,10 +48,6 @@ export class StudentFormComponent {
   readonly errorMessage = signal<string | null>(null);
   readonly sexos = Object.values(Sexo);
 
-  readonly photoFile = signal<File | null>(null);
-  readonly photoPreviewUrl = signal<string | null>(null);
-  readonly photoError = signal<string | null>(null);
-
   private existingMatriculas: string[] = [];
 
   readonly form = this.fb.group({
@@ -80,43 +74,6 @@ export class StudentFormComponent {
     this.form.controls.matricula.setValue(generateMatricula(nombres, apellidos, this.existingMatriculas));
   }
 
-  onPhotoSelected(event: Event) {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0] ?? null;
-    this.photoError.set(null);
-
-    if (!file) {
-      this.clearPhoto();
-      return;
-    }
-    if (!ALLOWED_PHOTO_TYPES.includes(file.type)) {
-      this.photoError.set('Formato no permitido. Use una imagen JPEG o PNG.');
-      input.value = '';
-      return;
-    }
-    if (file.size > MAX_PHOTO_SIZE_BYTES) {
-      this.photoError.set('La imagen supera el tamaño máximo permitido (2 MB).');
-      input.value = '';
-      return;
-    }
-
-    this.photoFile.set(file);
-    const reader = new FileReader();
-    reader.onload = () => this.photoPreviewUrl.set(reader.result as string);
-    reader.readAsDataURL(file);
-  }
-
-  removePhoto(input: HTMLInputElement) {
-    input.value = '';
-    this.clearPhoto();
-  }
-
-  private clearPhoto() {
-    this.photoFile.set(null);
-    this.photoPreviewUrl.set(null);
-    this.photoError.set(null);
-  }
-
   submit() {
     if (this.form.invalid || this.saving()) {
       this.form.markAllAsTouched();
@@ -131,29 +88,9 @@ export class StudentFormComponent {
     const payload = this.form.getRawValue();
     this.studentsService.create(payload as any).subscribe({
       next: (student) => {
-        const photo = this.photoFile();
-        if (!photo) {
-          this.saving.set(false);
-          this.notification.success('Estudiante creado correctamente.');
-          this.router.navigate(['/students', student.id]);
-          return;
-        }
-
-        this.studentsService.uploadPhoto(student.id, photo).subscribe({
-          next: () => {
-            this.saving.set(false);
-            this.notification.success('Estudiante creado correctamente, con foto.');
-            this.router.navigate(['/students', student.id]);
-          },
-          error: (err) => {
-            this.saving.set(false);
-            this.notification.error(
-              err?.error?.message ??
-                'El estudiante se creó, pero no se pudo guardar la foto. Puede intentarlo más tarde.',
-            );
-            this.router.navigate(['/students', student.id]);
-          },
-        });
+        this.saving.set(false);
+        this.notification.success('Estudiante creado correctamente.');
+        this.router.navigate(['/students', student.id]);
       },
       error: (err) => {
         const message: string = err?.error?.message ?? '';

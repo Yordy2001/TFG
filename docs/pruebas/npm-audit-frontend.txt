@@ -1,0 +1,81 @@
+# npm audit report
+
+@angular/common  20.0.0-next.0 - 20.3.27
+Severity: moderate
+Depends on vulnerable versions of @angular/core
+Angular: Information Leak via `HttpTransferCache` Bypass When Using `withRequestsMadeViaParent` - https://github.com/advisories/GHSA-p297-fm68-3q8c
+fix available via `npm audit fix`
+node_modules/@angular/common
+  @angular/forms  4.4.0-RC.0 - 4.4.0 || 20.0.0-next.0 - 20.3.27
+  Depends on vulnerable versions of @angular/common
+  Depends on vulnerable versions of @angular/core
+  Depends on vulnerable versions of @angular/platform-browser
+  node_modules/@angular/forms
+  @angular/platform-browser  20.0.0-next.0 - 20.3.27
+  Depends on vulnerable versions of @angular/animations
+  Depends on vulnerable versions of @angular/common
+  Depends on vulnerable versions of @angular/core
+  node_modules/@angular/platform-browser
+  @angular/router  10.0.0-next.0 - 10.0.0-rc.1 || 20.0.0-next.0 - 20.3.27
+  Depends on vulnerable versions of @angular/common
+  Depends on vulnerable versions of @angular/core
+  Depends on vulnerable versions of @angular/platform-browser
+  node_modules/@angular/router
+
+@angular/compiler  20.0.0 - 20.3.27
+Severity: moderate
+Angular: Sanitization bypass via directive host bindings on concrete host elements in @angular/core and @angular/compiler - https://github.com/advisories/GHSA-hh8m-fm6v-7cvg
+fix available via `npm audit fix`
+node_modules/@angular/compiler
+  @angular/compiler-cli  20.0.0-next.0 - 20.3.27
+  Depends on vulnerable versions of @angular/compiler
+  node_modules/@angular/compiler-cli
+  @angular/core  20.0.0-next.0 - 20.3.27
+  Depends on vulnerable versions of @angular/compiler
+  node_modules/@angular/core
+    @angular/animations  20.0.0-next.0 - 20.3.27
+    Depends on vulnerable versions of @angular/core
+    node_modules/@angular/animations
+
+
+fast-uri  3.0.0 - 3.1.5
+Severity: high
+fast-uri vulnerable to host confusion via skipped IDN canonicalization on scheme-relative references - https://github.com/advisories/GHSA-5jgf-p345-68v8
+fast-uri vulnerable to server-side request forgery via malformed IPv6 normalization - https://github.com/advisories/GHSA-f65p-4m7j-42xc
+fast-uri vulnerable to server-side request forgery via repeated hostname percent-decoding - https://github.com/advisories/GHSA-fph4-wmhf-6fwf
+fast-uri vulnerable to host confusion via percent-encoded scheme normalization - https://github.com/advisories/GHSA-jqff-g426-hqxp
+fix available via `npm audit fix`
+node_modules/fast-uri
+
+hono  <=4.13.4
+Severity: moderate
+Hono: ReDoS in CORS middleware via Access-Control-Request-Headers - https://github.com/advisories/GHSA-8j4g-w8fx-2239
+Hono: `memo()` retains SSR output across requests, leading to cross-user data disclosure - https://github.com/advisories/GHSA-f23p-vx2j-j53r
+Hono: Proxy Helper does not remove response headers listed in the `Connection` header - https://github.com/advisories/GHSA-79qm-7rj5-m7r9
+Hono: Algorithmic Complexity DoS in Language Middleware - https://github.com/advisories/GHSA-54fx-42gc-7vw4
+Hono: Incomplete fix for CVE-2026-39408: `toSSG()` still writes files outside the output directory - https://github.com/advisories/GHSA-gqvv-2mrq-wpjv
+Hono: Unbounded dot-notation nesting in `parseBody()` can cause memory exhaustion - https://github.com/advisories/GHSA-g6gw-c38x-mqfc
+Hono: Query parser reads parameters after the URL fragment, causing cache-key and proxy interpretation differentials - https://github.com/advisories/GHSA-crvj-82cr-hjcx
+fix available via `npm audit fix`
+node_modules/hono
+
+nanoid  <3.3.18
+Severity: high
+nanoid: custom generators can loop indefinitely when size is zero - https://github.com/advisories/GHSA-2v37-7h3g-55p8
+fix available via `npm audit fix`
+node_modules/nanoid
+
+qs  2.2.5 - 6.15.3
+Severity: moderate
+qs array-limit bypass via bracket-key comma parsing - https://github.com/advisories/GHSA-x5fp-wj9c-mxmx
+qs: Denial of Service via Attacker Controlled isBuffer - https://github.com/advisories/GHSA-4mjr-xmp4-gh2g
+fix available via `npm audit fix`
+node_modules/qs
+  body-parser  1.20.5 - 1.20.6
+  Depends on vulnerable versions of qs
+  node_modules/karma/node_modules/body-parser
+
+13 vulnerabilities (11 moderate, 2 high)
+
+To address all issues, run:
+  npm audit fix

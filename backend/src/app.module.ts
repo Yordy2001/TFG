@@ -18,6 +18,10 @@ import { FollowUpModule } from './modules/follow-up/follow-up.module';
 import { ClassroomObservationsModule } from './modules/classroom-observations/classroom-observations.module';
 import { RiskModule } from './modules/risk/risk.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { OutcomesModule } from './modules/outcomes/outcomes.module';
+import { JobsModule } from './common/jobs/jobs.module';
+import { IdentityMappingModule } from './modules/identity-mapping/identity-mapping.module';
+import { DataQualityModule } from './modules/data-quality/data-quality.module';
 
 @Module({
   imports: [
@@ -37,6 +41,10 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
     ClassroomObservationsModule,
     RiskModule,
     DashboardModule,
+    OutcomesModule,
+    JobsModule,
+    IdentityMappingModule,
+    DataQualityModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },

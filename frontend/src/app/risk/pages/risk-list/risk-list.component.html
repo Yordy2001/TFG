@@ -10,7 +10,7 @@
           <tr>
             <th class="px-4 py-2 text-left font-medium text-slate-500">Estudiante</th>
             <th class="px-4 py-2 text-left font-medium text-slate-500">Matrícula</th>
-            <th class="px-4 py-2 text-left font-medium text-slate-500">Porcentaje</th>
+            <th class="px-4 py-2 text-left font-medium text-slate-500">Índice de riesgo (IRR)</th>
             <th class="px-4 py-2 text-left font-medium text-slate-500">Nivel</th>
           </tr>
         </thead>
@@ -23,7 +23,7 @@
                 </a>
               </td>
               <td class="px-4 py-2 text-slate-500">{{ row.estudiante?.matricula }}</td>
-              <td class="px-4 py-2 font-semibold text-slate-900">{{ row.riesgo.porcentaje }}%</td>
+              <td class="px-4 py-2 font-semibold text-slate-900">{{ row.riesgo.porcentaje }}</td>
               <td class="px-4 py-2"><app-risk-badge [nivel]="row.riesgo.nivel" /></td>
             </tr>
           } @empty {

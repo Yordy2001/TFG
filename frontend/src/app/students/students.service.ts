@@ -7,7 +7,7 @@ import { API_BASE_URL } from '../core/config/api.config';
 
 export type CreateStudentPayload = Omit<
   Estudiante,
-  'id' | 'centroId' | 'activo' | 'incidentesDisciplinarios' | 'fotoArchivo'
+  'id' | 'centroId' | 'activo' | 'incidentesDisciplinarios'
 >;
 
 export type ImportRowStatus = 'valida' | 'advertencia' | 'error';
@@ -68,18 +68,6 @@ export class StudentsService {
 
   deactivate(id: string) {
     return this.http.delete<ApiResponse<Estudiante>>(`${API_BASE_URL}/students/${id}`).pipe(map((res) => res.data));
-  }
-
-  uploadPhoto(id: string, file: File) {
-    const formData = new FormData();
-    formData.append('file', file);
-    return this.http
-      .post<ApiResponse<{ fotoArchivo: string }>>(`${API_BASE_URL}/students/${id}/photo`, formData)
-      .pipe(map((res) => res.data));
-  }
-
-  getPhotoBlob(id: string) {
-    return this.http.get(`${API_BASE_URL}/students/${id}/photo`, { responseType: 'blob' });
   }
 
   downloadImportTemplate() {

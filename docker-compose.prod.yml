@@ -1,0 +1,47 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: guardianedu-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-guardianedu}
+      POSTGRES_USER: ${POSTGRES_USER:-guardianedu}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - guardianedu-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-guardianedu} -d ${POSTGRES_DB:-guardianedu}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+    container_name: guardianedu-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-guardianedu}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-guardianedu}?schema=public
+      PORT: 3000
+      CORS_ORIGIN: ${CORS_ORIGIN}
+      JWT_SECRET: ${JWT_SECRET}
+      IDENTITY_HASH_SALT: ${IDENTITY_HASH_SALT}
+    volumes:
+      - guardianedu-uploads:/app/uploads
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: guardianedu-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - '80:80'
+
+volumes:
+  guardianedu-postgres-data:
+  guardianedu-uploads:

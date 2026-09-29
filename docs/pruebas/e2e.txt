@@ -1,0 +1,18 @@
+PASS test/app.e2e-spec.ts (8.65 s)
+  API e2e (base de datos de desarrollo)
+    Autenticación
+      √ POST /auth/login con credenciales válidas → 200 y devuelve accessToken (232 ms)
+      √ POST /auth/login con credenciales inválidas → 401 (236 ms)
+    Control de acceso por rol (RolesGuard)
+      √ DOCENTE → GET /follow-up/recent → 403 (7 ms)
+      √ DOCENTE → POST /risk/adjustment → 403 (5 ms)
+    Validación de entrada
+      √ ORIENTADOR → POST /risk/adjustment con ajuste fuera de rango (999) → 400 (6 ms)
+    Motor de riesgo (integración)
+      √ POST /evaluations/grades crea una fila en historial_riesgo (recálculo automático) (53 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       6 passed, 6 total
+Snapshots:   0 total
+Time:        8.941 s, estimated 11 s
+Ran all test suites.

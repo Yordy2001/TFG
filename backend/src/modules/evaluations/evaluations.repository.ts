@@ -14,9 +14,9 @@ export class EvaluationsRepository {
     return this.prisma.actividadEvaluacion.findFirst({ where: { id, centroId } });
   }
 
-  async pesoAcumulado(asignacionDocenteId: string, periodoEvaluativo: string): Promise<number> {
+  async pesoAcumulado(asignacionDocenteId: string, periodoEvaluativo: string, competencia: string): Promise<number> {
     const result = await this.prisma.actividadEvaluacion.aggregate({
-      where: { asignacionDocenteId, periodoEvaluativo: periodoEvaluativo as never },
+      where: { asignacionDocenteId, periodoEvaluativo: periodoEvaluativo as never, competencia: competencia as never },
       _sum: { porcentaje: true },
     });
     return result._sum.porcentaje ?? 0;

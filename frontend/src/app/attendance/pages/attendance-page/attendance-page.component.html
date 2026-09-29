@@ -78,7 +78,9 @@
                             ? 'border-green-500 bg-green-100 text-green-700'
                             : estado === EstadoAsistencia.TARDANZA
                               ? 'border-amber-500 bg-amber-100 text-amber-700'
-                              : 'border-[#d92d20] bg-[#fee4e2] text-[#d92d20]')
+                              : estado === EstadoAsistencia.AUSENCIA_JUSTIFICADA
+                                ? 'border-sky-500 bg-sky-100 text-sky-700'
+                                : 'border-[#d92d20] bg-[#fee4e2] text-[#d92d20]')
                         : 'border-slate-300 text-slate-600 hover:bg-slate-100'
                     "
                   >

@@ -12,6 +12,9 @@ const PESOS = {
   ajusteProfesional: 0.1,
 };
 
+// Bump this whenever PESOS or clasificar() change, in the same commit as the change.
+export const RISK_ENGINE_VERSION = '1.0.0';
+
 function clasificar(porcentaje: number): NivelRiesgo {
   if (porcentaje >= 80) return NivelRiesgo.ALTO;
   if (porcentaje >= 50) return NivelRiesgo.MEDIO;
@@ -68,8 +71,20 @@ export class RiskEngineService {
 
     const riesgo = await this.prisma.riesgo.upsert({
       where: { estudianteId },
-      create: { centroId, estudianteId, porcentaje: porcentajeFinal, nivel: nivel as never, fechaCalculo: fecha },
-      update: { porcentaje: porcentajeFinal, nivel: nivel as never, fechaCalculo: fecha },
+      create: {
+        centroId,
+        estudianteId,
+        porcentaje: porcentajeFinal,
+        nivel: nivel as never,
+        fechaCalculo: fecha,
+        versionReglasRiskEngine: RISK_ENGINE_VERSION,
+      },
+      update: {
+        porcentaje: porcentajeFinal,
+        nivel: nivel as never,
+        fechaCalculo: fecha,
+        versionReglasRiskEngine: RISK_ENGINE_VERSION,
+      },
     });
 
     await this.registrarHistorial(estudianteId, centroId, porcentajeSistema, ajuste, null);
@@ -94,6 +109,7 @@ export class RiskEngineService {
         nivel: clasificar(porcentajeFinal) as never,
         usuarioId,
         fecha: new Date(),
+        versionReglasRiskEngine: RISK_ENGINE_VERSION,
       },
     });
   }
@@ -111,8 +127,20 @@ export class RiskEngineService {
 
     const riesgo = await this.prisma.riesgo.upsert({
       where: { estudianteId },
-      create: { centroId, estudianteId, porcentaje: porcentajeFinal, nivel: nivel as never, fechaCalculo: new Date() },
-      update: { porcentaje: porcentajeFinal, nivel: nivel as never, fechaCalculo: new Date() },
+      create: {
+        centroId,
+        estudianteId,
+        porcentaje: porcentajeFinal,
+        nivel: nivel as never,
+        fechaCalculo: new Date(),
+        versionReglasRiskEngine: RISK_ENGINE_VERSION,
+      },
+      update: {
+        porcentaje: porcentajeFinal,
+        nivel: nivel as never,
+        fechaCalculo: new Date(),
+        versionReglasRiskEngine: RISK_ENGINE_VERSION,
+      },
     });
 
     await this.registrarHistorial(estudianteId, centroId, porcentajeSistema, ajuste, usuarioId);

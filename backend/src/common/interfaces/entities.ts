@@ -3,7 +3,9 @@ import {
   CategoriaObservacion,
   Competencia,
   EstadoAsistencia,
+  EstadoFinalPeriodo,
   EstadoSeguimiento,
+  FuenteConfirmacion,
   NivelRiesgo,
   PeriodoEvaluativo,
   Sexo,
@@ -57,7 +59,6 @@ export interface Estudiante {
   fechaNacimiento: string;
   activo: boolean;
   incidentesDisciplinarios: number;
-  fotoArchivo: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -130,8 +131,24 @@ export interface SeguimientoOrientador {
   acciones: string;
   proximaCita: string | null;
   estado: EstadoSeguimiento;
+  situacionEconomicaFamiliar: number | null;
+  apoyoFamiliarPercibido: number | null;
+  trabajaDurantePeriodoEscolar: boolean | null;
+  distanciaHogarEscuelaKm: number | null;
+  problemasFamiliaresReportados: boolean | null;
+  senalesPreviasAbandono: boolean | null;
+  factorAjusteOrientador: number | null;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface HistorialEstadoSeguimiento {
+  id: string;
+  centroId: string;
+  seguimientoId: string;
+  estado: EstadoSeguimiento;
+  cambiadoPorId: string;
+  fecha: Date;
 }
 
 export interface Riesgo {
@@ -141,6 +158,7 @@ export interface Riesgo {
   porcentaje: number;
   nivel: NivelRiesgo;
   fechaCalculo: Date;
+  versionReglasRiskEngine: string;
 }
 
 export interface HistorialRiesgo {
@@ -153,6 +171,62 @@ export interface HistorialRiesgo {
   nivel: NivelRiesgo;
   usuarioId: string | null;
   fecha: Date;
+  versionReglasRiskEngine: string;
+}
+
+export interface DesenlaceEstudiante {
+  id: string;
+  centroId: string;
+  estudianteId: string;
+  periodoAcademicoId: string;
+  estadoFinalPeriodo: EstadoFinalPeriodo;
+  fechaEvento: Date | null;
+  motivoRegistradoSalida: string | null;
+  fuenteConfirmacion: FuenteConfirmacion;
+  confirmadoPorId: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ReporteCalidadDato {
+  id: string;
+  centroId: string;
+  generadoEn: Date;
+  entidad: string;
+  porcentajeCamposCompletos: number;
+  diasDesdeUltimaActualizacionPromedio: number;
+  inconsistenciasDetectadas: number;
+  detalleJson: unknown;
+}
+
+export interface IdentidadEstudianteMapping {
+  id: string;
+  centroId: string;
+  estudianteId: string;
+  estudianteHash: string;
+  createdAt: Date;
+}
+
+export interface HistorialAcademico {
+  id: string;
+  centroId: string;
+  estudianteId: string;
+  asignaturaId: string;
+  periodoEvaluativo: PeriodoEvaluativo;
+  calificacion: number;
+  reprobo: boolean;
+  numeroVecesRepitenciaAcumulada: number;
+  calculadoEn: Date;
+}
+
+export interface AgregadoAsistenciaMensual {
+  id: string;
+  centroId: string;
+  estudianteId: string;
+  anioMes: string;
+  porcentajeAsistenciaMensual: number;
+  rachaMaximaAusenciasConsecutivas: number;
+  calculadoEn: Date;
 }
 
 export interface ObservacionAula {

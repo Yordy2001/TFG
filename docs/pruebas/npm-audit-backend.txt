@@ -1,0 +1,120 @@
+# npm audit report
+
+deepmerge-ts  <8.0.0
+Severity: high
+DeepmergeTS has stack exhaustion when merging recursive object graphs - https://github.com/advisories/GHSA-ggr8-5vv4-36mx
+fix available via `npm audit fix --force`
+Will install prisma@6.12.0, which is a breaking change
+node_modules/deepmerge-ts
+  @prisma/config  6.13.0-dev.1 - 8.1.0-dev.4
+  Depends on vulnerable versions of deepmerge-ts
+  node_modules/@prisma/config
+    prisma  6.13.0-dev.1 - 8.1.0-dev.4
+    Depends on vulnerable versions of @prisma/config
+    node_modules/prisma
+
+fast-uri  3.0.0 - 3.1.5
+Severity: high
+fast-uri vulnerable to host confusion via skipped IDN canonicalization on scheme-relative references - https://github.com/advisories/GHSA-5jgf-p345-68v8
+fast-uri vulnerable to server-side request forgery via malformed IPv6 normalization - https://github.com/advisories/GHSA-f65p-4m7j-42xc
+fast-uri vulnerable to server-side request forgery via repeated hostname percent-decoding - https://github.com/advisories/GHSA-fph4-wmhf-6fwf
+fast-uri vulnerable to host confusion via percent-encoded scheme normalization - https://github.com/advisories/GHSA-jqff-g426-hqxp
+fix available via `npm audit fix`
+node_modules/fast-uri
+
+file-type  13.0.0 - 21.3.1
+Severity: moderate
+file-type affected by infinite loop in ASF parser on malformed input with zero-size sub-header - https://github.com/advisories/GHSA-5v7r-6r5c-r473
+file-type: ZIP Decompression Bomb DoS via [Content_Types].xml entry - https://github.com/advisories/GHSA-j47w-4g3g-c36v
+fix available via `npm audit fix --force`
+Will install @swc/cli@0.8.1, which is a breaking change
+node_modules/@xhmikosr/archive-type/node_modules/file-type
+node_modules/@xhmikosr/decompress-tar/node_modules/file-type
+node_modules/@xhmikosr/decompress-tarbz2/node_modules/file-type
+node_modules/@xhmikosr/decompress-targz/node_modules/file-type
+node_modules/@xhmikosr/decompress-unzip/node_modules/file-type
+node_modules/@xhmikosr/downloader/node_modules/file-type
+  @xhmikosr/archive-type  6.0.0 - 7.1.0
+  Depends on vulnerable versions of file-type
+  node_modules/@xhmikosr/archive-type
+    @xhmikosr/downloader  10.0.0 - 10.0.1 || 12.0.0 - 15.2.0
+    Depends on vulnerable versions of @xhmikosr/archive-type
+    Depends on vulnerable versions of @xhmikosr/decompress
+    Depends on vulnerable versions of file-type
+    node_modules/@xhmikosr/downloader
+      @xhmikosr/bin-wrapper  10.0.0 - 13.2.0
+      Depends on vulnerable versions of @xhmikosr/downloader
+      node_modules/@xhmikosr/bin-wrapper
+        @swc/cli  0.5.1 - 0.8.0
+        Depends on vulnerable versions of @xhmikosr/bin-wrapper
+        node_modules/@swc/cli
+  @xhmikosr/decompress-tar  6.0.0 - 8.1.0
+  Depends on vulnerable versions of file-type
+  node_modules/@xhmikosr/decompress-tar
+    @xhmikosr/decompress-tarbz2  6.0.0 - 9.0.0
+    Depends on vulnerable versions of @xhmikosr/decompress-tar
+    Depends on vulnerable versions of file-type
+    node_modules/@xhmikosr/decompress-tarbz2
+    @xhmikosr/decompress-targz  6.0.0 - 9.0.0
+    Depends on vulnerable versions of @xhmikosr/decompress-tar
+    Depends on vulnerable versions of file-type
+    node_modules/@xhmikosr/decompress-targz
+  @xhmikosr/decompress-unzip  6.0.0 - 7.1.0
+  Depends on vulnerable versions of file-type
+  node_modules/@xhmikosr/decompress-unzip
+    @xhmikosr/decompress  8.0.0 - 10.2.2
+    Depends on vulnerable versions of @xhmikosr/decompress-tar
+    Depends on vulnerable versions of @xhmikosr/decompress-tarbz2
+    Depends on vulnerable versions of @xhmikosr/decompress-targz
+    Depends on vulnerable versions of @xhmikosr/decompress-unzip
+    node_modules/@xhmikosr/decompress
+
+js-yaml  3.0.0 - 3.15.1 || 4.0.0 - 4.3.1 || 5.0.0 - 5.2.1
+Severity: high
+js-yaml: Exponential parsing time in flow collections leads to denial of service - https://github.com/advisories/GHSA-pm4m-ph32-ghv5
+js-yaml: maxTotalMergeKeys does not limit CPU use for empty merge sources - https://github.com/advisories/GHSA-2883-xcg3-v3hh
+js-yaml: maxTotalMergeKeys does not limit CPU use for empty merge sources - https://github.com/advisories/GHSA-2883-xcg3-v3hh
+fix available via `npm audit fix`
+node_modules/@istanbuljs/load-nyc-config/node_modules/js-yaml
+node_modules/@nestjs/swagger/node_modules/js-yaml
+node_modules/js-yaml
+  @nestjs/swagger  11.4.6
+  Depends on vulnerable versions of js-yaml
+  node_modules/@nestjs/swagger
+
+multer  <=2.2.0
+Severity: high
+multer vulnerable to Denial of Service via crafted multipart field names - https://github.com/advisories/GHSA-wc9g-mqfw-jrwm
+multer vulnerable to Denial of Service via file descriptor leak on aborted uploads - https://github.com/advisories/GHSA-qfvm-cv95-jqjf
+multer vulnerable to file size limit bypass via async fileFilter race condition - https://github.com/advisories/GHSA-qvfw-j98x-7q72
+multer vulnerable to Denial of Service via oversized array index in field names - https://github.com/advisories/GHSA-535w-7cp7-47q4
+fix available via `npm audit fix`
+node_modules/multer
+  @nestjs/platform-express  <=11.2.5 || 12.0.0-alpha.0 - 12.0.1
+  Depends on vulnerable versions of multer
+  node_modules/@nestjs/platform-express
+
+qs  2.2.5 - 6.15.3
+Severity: moderate
+qs array-limit bypass via bracket-key comma parsing - https://github.com/advisories/GHSA-x5fp-wj9c-mxmx
+qs: Denial of Service via Attacker Controlled isBuffer - https://github.com/advisories/GHSA-4mjr-xmp4-gh2g
+fix available via `npm audit fix`
+node_modules/qs
+
+uuid  <11.1.1
+Severity: moderate
+uuid: Missing buffer bounds check in v3/v5/v6 when buf is provided - https://github.com/advisories/GHSA-w5hq-g745-h8pq
+fix available via `npm audit fix --force`
+Will install exceljs@3.4.0, which is a breaking change
+node_modules/exceljs/node_modules/uuid
+  exceljs  >=3.5.0
+  Depends on vulnerable versions of uuid
+  node_modules/exceljs
+
+21 vulnerabilities (13 moderate, 8 high)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force

@@ -26,14 +26,14 @@
       <div class="card lg:col-span-2">
         <div class="mb-3 flex items-center justify-between">
           <h2 class="text-sm font-semibold text-slate-700">Atención Inmediata</h2>
-          <p class="text-xs text-slate-400">Estudiantes con mayor probabilidad de deserción</p>
+          <p class="text-xs text-slate-400">Estudiantes con mayor índice de riesgo</p>
         </div>
         <table class="min-w-full divide-y divide-slate-100 text-sm">
           <thead>
             <tr class="text-left text-xs text-slate-500">
               <th class="py-2 pr-4 font-medium">Estudiante</th>
               <th class="py-2 pr-4 font-medium">Riesgo</th>
-              <th class="py-2 pr-4 font-medium">Porcentaje</th>
+              <th class="py-2 pr-4 font-medium">Índice de riesgo (IRR)</th>
               <th class="py-2 font-medium">Acción</th>
             </tr>
           </thead>
@@ -47,7 +47,7 @@
                   <span class="ml-1 text-xs text-slate-400">({{ est.matricula }})</span>
                 </td>
                 <td class="py-2 pr-4"><app-risk-badge [nivel]="est.nivel" /></td>
-                <td class="py-2 pr-4 font-medium text-slate-700">{{ est.porcentaje }}%</td>
+                <td class="py-2 pr-4 font-medium text-slate-700">{{ est.porcentaje }}</td>
                 <td class="py-2">
                   <a [routerLink]="['/students', est.estudianteId]" class="text-[#003366] hover:text-[#0a4d8c]">
                     <mat-icon class="!h-5 !w-5 !text-[20px]">edit_note</mat-icon>

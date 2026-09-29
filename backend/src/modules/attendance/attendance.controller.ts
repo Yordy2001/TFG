@@ -19,6 +19,7 @@ export class AttendanceController {
   }
 
   @Get('students/:estudianteId')
+  @Roles(Role.ADMINISTRADOR, Role.REGISTRO, Role.DIRECTOR, Role.DOCENTE, Role.ORIENTADOR)
   summary(@Param('estudianteId') estudianteId: string) {
     return this.attendanceService.summary(estudianteId);
   }

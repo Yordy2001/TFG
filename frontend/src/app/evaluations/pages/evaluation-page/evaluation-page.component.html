@@ -2,21 +2,46 @@
   <app-top-bar title="Registro de Calificaciones" eyebrow="Sistema de Alerta Temprana" />
 
   <div class="mb-6 flex flex-wrap items-end justify-between gap-4">
-    <div>
-      <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Asignación (curso — asignatura)</label>
-      <select
-        [ngModel]="selectedAssignmentId()"
-        (ngModelChange)="selectAssignment($event)"
-        class="w-full max-w-md rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#003366] focus:outline-none focus:ring-1 focus:ring-[#003366]"
-      >
-        @for (a of assignments(); track a.id) {
-          <option [value]="a.id">{{ courseName(a.cursoId) }} — {{ subjectName(a.asignaturaId) }}</option>
-        }
-      </select>
+    <div class="flex flex-wrap items-end gap-4">
+      <div>
+        <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Asignación (curso — asignatura)</label>
+        <select
+          [ngModel]="selectedAssignmentId()"
+          (ngModelChange)="selectAssignment($event)"
+          class="w-full max-w-md rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#003366] focus:outline-none focus:ring-1 focus:ring-[#003366]"
+        >
+          @for (a of assignments(); track a.id) {
+            <option [value]="a.id">{{ courseName(a.cursoId) }} — {{ subjectName(a.asignaturaId) }}</option>
+          }
+        </select>
+      </div>
+      <div>
+        <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Competencia</label>
+        <select
+          [ngModel]="selectedCompetencia()"
+          (ngModelChange)="selectedCompetencia.set($event)"
+          class="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#003366] focus:outline-none focus:ring-1 focus:ring-[#003366]"
+        >
+          @for (c of competencias; track c) {
+            <option [value]="c">{{ competenciaLabels[c] }}</option>
+          }
+        </select>
+      </div>
+      <div>
+        <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Ciclo escolar</label>
+        <select
+          [ngModel]="selectedPeriodo()"
+          (ngModelChange)="selectedPeriodo.set($event)"
+          class="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[#003366] focus:outline-none focus:ring-1 focus:ring-[#003366]"
+        >
+          @for (p of periodos; track p) {
+            <option [value]="p">{{ p }}</option>
+          }
+        </select>
+      </div>
     </div>
     @if (selectedAssignment()) {
       <div class="flex items-center gap-2">
-        <button type="button" (click)="openCreateActivityDialog()" class="btn-secondary">Agregar actividad</button>
         <button type="button" [disabled]="!hasDirtyGrades() || savingGrades()" (click)="saveAllGrades()" class="btn-primary">
           {{ savingGrades() ? 'Guardando…' : 'Guardar calificación' }}
         </button>
@@ -26,7 +51,10 @@
 
   @if (selectedAssignment(); as assignment) {
     <div class="card overflow-x-auto">
-      <h2 class="mb-3 text-sm font-semibold text-slate-700">Registro de calificaciones</h2>
+      <div class="mb-3 flex items-center justify-between">
+        <h2 class="text-sm font-semibold text-slate-700">Registro de calificaciones</h2>
+        <span class="text-xs text-slate-500">Peso total: {{ pesoTotal() }}%</span>
+      </div>
       <table class="min-w-full divide-y divide-slate-200 text-sm">
         <thead>
           <tr class="text-left text-slate-500">

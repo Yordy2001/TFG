@@ -19,10 +19,14 @@ export class EvaluationsService {
   }
 
   async createActivity(dto: CreateActivityDto, centroId: string) {
-    const acumulado = await this.evaluationsRepository.pesoAcumulado(dto.asignacionDocenteId, dto.periodoEvaluativo);
+    const acumulado = await this.evaluationsRepository.pesoAcumulado(
+      dto.asignacionDocenteId,
+      dto.periodoEvaluativo,
+      dto.competencia,
+    );
     if (acumulado + dto.porcentaje > 100) {
       throw new BadRequestException(
-        `Activity weight exceeds 100% for this period (accumulated: ${acumulado}%)`,
+        `Activity weight exceeds 100% for this period and competency (accumulated: ${acumulado}%)`,
       );
     }
     return this.evaluationsRepository.createActivity({ ...dto, centroId });

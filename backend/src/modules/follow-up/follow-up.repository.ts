@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { SeguimientoOrientador } from '../../common/interfaces/entities';
+import { EstadoSeguimiento } from '../../common/enums';
 
 @Injectable()
 export class FollowUpRepository {
@@ -33,5 +34,16 @@ export class FollowUpRepository {
     const result = await this.prisma.seguimientoOrientador.updateMany({ where: { id, centroId }, data: data as never });
     if (result.count === 0) return undefined;
     return (await this.prisma.seguimientoOrientador.findFirst({ where: { id, centroId } })) ?? undefined;
+  }
+
+  appendEstadoHistorial(
+    seguimientoId: string,
+    centroId: string,
+    estado: EstadoSeguimiento,
+    cambiadoPorId: string,
+  ): Promise<unknown> {
+    return this.prisma.historialEstadoSeguimiento.create({
+      data: { seguimientoId, centroId, estado: estado as never, cambiadoPorId },
+    });
   }
 }

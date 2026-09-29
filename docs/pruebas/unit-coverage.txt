@@ -1,0 +1,15 @@
+PASS src/common/engines/academic-engine.service.spec.ts
+PASS src/common/engines/risk-engine.service.spec.ts (5.244 s)
+----------------------------|---------|----------|---------|---------|-------------------
+File                        | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+----------------------------|---------|----------|---------|---------|-------------------
+All files                   |   83.47 |       50 |   88.46 |   86.13 |                   
+ academic-engine.service.ts |   72.97 |    42.85 |   83.33 |   75.86 | 31-51             
+ risk-engine.service.ts     |     100 |     62.5 |     100 |     100 | 40-53             
+----------------------------|---------|----------|---------|---------|-------------------
+
+Test Suites: 2 passed, 2 total
+Tests:       21 passed, 21 total
+Snapshots:   0 total
+Time:        6.467 s, estimated 7 s
+Ran all test suites matching /src\\common\\engines/i.

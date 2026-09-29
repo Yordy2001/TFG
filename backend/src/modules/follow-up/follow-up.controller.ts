@@ -30,6 +30,6 @@ export class FollowUpController {
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() dto: UpdateFollowUpDto, @CurrentUser() user: AuthenticatedUser) {
-    return this.followUpService.update(id, user.centroId, dto);
+    return this.followUpService.update(id, user.centroId, dto, user.sub);
   }
 }

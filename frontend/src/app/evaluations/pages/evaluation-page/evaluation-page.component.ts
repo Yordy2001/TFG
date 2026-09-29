@@ -1,6 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { MatDialog } from '@angular/material/dialog';
 import { catchError, forkJoin, map, of } from 'rxjs';
 import { SubjectsService } from '../../../subjects/subjects.service';
 import { CoursesService } from '../../../courses/courses.service';
@@ -9,8 +8,21 @@ import { EvaluationsService } from '../../evaluations.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { TopBarComponent } from '../../../shared/components/top-bar/top-bar.component';
-import { CreateActivityDialogComponent } from '../../components/create-activity-dialog/create-activity-dialog.component';
-import { AsignacionDocente, Asignatura, Curso, Estudiante, ActividadEvaluacion } from '../../../core/models/domain.model';
+import {
+  AsignacionDocente,
+  Asignatura,
+  Curso,
+  Estudiante,
+  ActividadEvaluacion,
+  Competencia,
+  PeriodoEvaluativo,
+} from '../../../core/models/domain.model';
+
+const COMPETENCIA_LABELS: Record<Competencia, string> = {
+  [Competencia.C1_COMUNICATIVA]: 'C1 — Comunicativa',
+  [Competencia.C2_LOGICO_CIENTIFICA]: 'C2 — Lógico-científica',
+  [Competencia.C3_ETICA_CIUDADANA]: 'C3 — Ética y ciudadana',
+};
 
 @Component({
   selector: 'app-evaluation-page',
@@ -25,13 +37,24 @@ export class EvaluationPageComponent {
   private readonly evaluationsService = inject(EvaluationsService);
   private readonly authService = inject(AuthService);
   private readonly notification = inject(NotificationService);
-  private readonly dialog = inject(MatDialog);
+
+  readonly competencias = Object.values(Competencia);
+  readonly periodos = Object.values(PeriodoEvaluativo);
+  readonly competenciaLabels = COMPETENCIA_LABELS;
 
   readonly assignments = signal<AsignacionDocente[]>([]);
   readonly courses = signal<Curso[]>([]);
   readonly subjects = signal<Asignatura[]>([]);
   readonly selectedAssignmentId = signal<string>('');
-  readonly activities = signal<ActividadEvaluacion[]>([]);
+  readonly selectedCompetencia = signal<Competencia>(Competencia.C1_COMUNICATIVA);
+  readonly selectedPeriodo = signal<PeriodoEvaluativo>(PeriodoEvaluativo.P1);
+  readonly allActivities = signal<ActividadEvaluacion[]>([]);
+  readonly activities = computed(() =>
+    this.allActivities().filter(
+      (a) => a.competencia === this.selectedCompetencia() && a.periodoEvaluativo === this.selectedPeriodo(),
+    ),
+  );
+  readonly pesoTotal = computed(() => this.activities().reduce((sum, a) => sum + a.porcentaje, 0));
   readonly students = signal<Estudiante[]>([]);
   readonly grades = signal<Record<string, Record<string, number>>>({});
   readonly dirtyKeys = signal<Set<string>>(new Set());
@@ -71,21 +94,8 @@ export class EvaluationPageComponent {
 
   private loadActivities() {
     this.evaluationsService.activitiesByAssignment(this.selectedAssignmentId()).subscribe((acts) => {
-      this.activities.set(acts);
+      this.allActivities.set(acts);
     });
-  }
-
-  openCreateActivityDialog() {
-    this.dialog
-      .open(CreateActivityDialogComponent, {
-        data: { asignacionDocenteId: this.selectedAssignmentId() },
-        width: '520px',
-        maxWidth: '95vw',
-      })
-      .afterClosed()
-      .subscribe((activity) => {
-        if (activity) this.activities.update((current) => [...current, activity]);
-      });
   }
 
   gradeFor(actividadId: string, estudianteId: string): number | null {

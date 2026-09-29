@@ -45,31 +45,6 @@
       </select>
     </div>
 
-    <div>
-      <label class="mb-1 block text-sm font-medium text-slate-700">Foto (opcional)</label>
-      <div class="flex items-center gap-4">
-        @if (photoPreviewUrl(); as preview) {
-          <img [src]="preview" alt="Vista previa de la foto seleccionada" class="h-16 w-16 rounded-full object-cover" />
-        } @else {
-          <div class="flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 text-slate-400">
-            <span class="text-xs">Sin foto</span>
-          </div>
-        }
-        <div class="flex-1 space-y-1">
-          <input #photoInput type="file" accept="image/jpeg,image/png" (change)="onPhotoSelected($event)" class="block w-full text-sm" />
-          @if (photoFile()) {
-            <button type="button" (click)="removePhoto(photoInput)" class="text-xs font-medium text-slate-500 hover:text-[#d92d20]">
-              Quitar foto
-            </button>
-          }
-          <p class="text-xs text-slate-400">JPEG o PNG, máximo 2 MB.</p>
-        </div>
-      </div>
-      @if (photoError()) {
-        <p class="mt-1 text-sm text-red-600">{{ photoError() }}</p>
-      }
-    </div>
-
     @if (errorMessage()) {
       <p class="text-sm text-red-600">{{ errorMessage() }}</p>
     }

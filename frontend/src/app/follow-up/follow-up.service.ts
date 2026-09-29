@@ -12,6 +12,13 @@ export interface CreateFollowUpPayload {
   observaciones: string;
   acciones: string;
   proximaCita?: string;
+  situacionEconomicaFamiliar?: number;
+  apoyoFamiliarPercibido?: number;
+  trabajaDurantePeriodoEscolar?: boolean;
+  distanciaHogarEscuelaKm?: number;
+  problemasFamiliaresReportados?: boolean;
+  senalesPreviasAbandono?: boolean;
+  factorAjusteOrientador?: number;
 }
 
 @Injectable({ providedIn: 'root' })

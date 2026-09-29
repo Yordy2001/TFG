@@ -13,11 +13,13 @@ export enum EstadoAsistencia {
   PRESENTE = 'PRESENTE',
   AUSENTE = 'AUSENTE',
   TARDANZA = 'TARDANZA',
+  AUSENCIA_JUSTIFICADA = 'AUSENCIA_JUSTIFICADA',
 }
 
 export enum EstadoSeguimiento {
   ABIERTO = 'ABIERTO',
   EN_PROCESO = 'EN_PROCESO',
+  PENDIENTE_INTERVENCION = 'PENDIENTE_INTERVENCION',
   CERRADO = 'CERRADO',
 }
 
@@ -60,7 +62,6 @@ export interface Estudiante {
   fechaNacimiento: string;
   activo: boolean;
   incidentesDisciplinarios: number;
-  fotoArchivo: string | null;
 }
 
 export interface Asignatura {
@@ -117,6 +118,13 @@ export interface SeguimientoOrientador {
   acciones: string;
   proximaCita: string | null;
   estado: EstadoSeguimiento;
+  situacionEconomicaFamiliar: number | null;
+  apoyoFamiliarPercibido: number | null;
+  trabajaDurantePeriodoEscolar: boolean | null;
+  distanciaHogarEscuelaKm: number | null;
+  problemasFamiliaresReportados: boolean | null;
+  senalesPreviasAbandono: boolean | null;
+  factorAjusteOrientador: number | null;
 }
 
 export interface ObservacionAula {
